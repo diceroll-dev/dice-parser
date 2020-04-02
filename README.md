@@ -51,7 +51,7 @@ val result: Int = resultTree.value()
 | Compounding Dice (Target) | `<numberOfDice>d<numberOfFaces>!!><target>` | `3d6!!>5` | similar as exploding dice (target), but all dice are re-rolled and added. |
 | Target Pool Dice | `<numberOfDice>d<numberOfFaces>[>,<,=]<target>` | `3d6=6` | counts the number of dice that match the target (NOTE: greater & less than also match equals, i.e `>=` and `<=`) | 
 | Target Pool Dice (Expression) | `(<expression>)[>,<,=]<target>` | `(2d6+)>5` | A target pool roll, but where the expression is evaluated to the target. |
-| Integer | `<int>` - typically used in math operations, i.e. `2d4+2` |
+| Integer | `<int>` | `42` | typically used in math operations, i.e. `2d4+2` |
 | Math | `<left> <operation> <right>` |
 | Add | `<left> + <right>`  | `2d6 + 2` | |
 | Subtract | `<left> - <right>` | `2 - 1` | |
