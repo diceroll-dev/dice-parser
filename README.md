@@ -1,3 +1,7 @@
+[<img src="https://avatars0.githubusercontent.com/u/56687116?s=400&u=a1a754aad591efe43f8d00e768a87e67f6d3aead" align="right" width="256px"/>](https://github.com/diceroll-dev/dice-parser/)
+[![Maven Central](https://img.shields.io/maven-central/v/dev.diceroll/dice-parser.svg)](https://search.maven.org/#search%7Cga%7C1%7Cg%3A%22dev.diceroll%22%20a%3A%22dice-parser%22)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+
 # Dice Notation Parser for Kotlin and Java
 
 Java Usage:
