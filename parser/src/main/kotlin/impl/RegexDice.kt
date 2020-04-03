@@ -50,7 +50,7 @@ class RegexDice {
         private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[\\+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
         private val NESTED = "(?<LEFT>.*)$LPAREN(?<NESTED>.*)$RPAREN(?<RIGHT>.*)".toRegex() // 10(2) or (2) or 10(2)4
         private val MUL = "(?<left>.*)\\*(?<right>.*)".toRegex() // exp * exp
-        private val DIV = "(?<left>.*)\\\\(?<right>.*)".toRegex() // exp / exp
+        private val DIV = "(?<left>.*)/(?<right>.*)".toRegex() // exp / exp
         private val ADD = "(?<left>.*)\\+(?<right>.*)".toRegex() // exp + exp
         private val SUB = "(?<left>.*)-(?<right>.*)".toRegex() // exp - exp
     }

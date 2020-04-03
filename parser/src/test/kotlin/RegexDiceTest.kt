@@ -30,9 +30,31 @@ class RegexDiceTest {
 
     @Test
     fun add() {
-        expect(3) { parse("1+2") }
+        expect(3) { parse("1 +2") }
         expect(3) { parse("(1+2)") }
-        expect(9) { parse("(1+2)3") }
+        expect(9) { parse("(1+ 2)3") }
+    }
+
+    @Test
+    fun subtract() {
+        expect(-1) { parse("1-2") }
+        expect(1) { parse("(2-1)") }
+        expect(-3) { parse("(1-2)3") }
+    }
+
+    @Test
+    fun multiply() {
+        expect(4) { parse("2 * 2") }
+        expect(2) { parse("(2*1)") }
+        expect(18) { parse("(3*2)3") }
+    }
+
+    @Test
+    fun divide() {
+        expect(2) { parse("4/2") }
+        expect(3) { parse("7 / 2") }
+        expect(2) { parse("(4/2)") }
+        expect(6) { parse("(4/2)3") }
     }
 
     @Test
