@@ -37,6 +37,7 @@ class RegexDice {
         private val DICE_FACE = "$D(?<FACES>$INT)" // d6
         private val N_DICE_FACE = "(?<numberOfDice>$INT)$DICE_FACE" // 2d6
         private val DICE_FACE_X = "$DICE_FACE$X" // d6
+        private val N_DICE_FACE_X = "(?<numberOfDice>$INT)$DICE_FACE$X" // 2d6
         private val FUDGE_DICE = "$D$F" // dF
         private val N_FUDGE_DICE = "(?<numberOfDice>$INT)$D$F" // 2dF
         private val DOT_FUDGE_DICE = "$FUDGE_DICE$DOT(?<weight>$INT)" // dF.1
@@ -61,6 +62,7 @@ class RegexDice {
             KEEP_DICE to this::visitKeepDice,
             DICE_FACE.toRegex() to this::visitDiceFace,
             DICE_FACE_X.toRegex() to this::visitDiceFaceX,
+            N_DICE_FACE_X.toRegex() to this::visitNDiceFaceX,
             FUDGE_DICE.toRegex() to this::visitFudgeDice,
             N_FUDGE_DICE.toRegex() to this::visitNFudgeDice,
             DOT_FUDGE_DICE.toRegex() to this::visitFudgeDiceDot,
@@ -90,6 +92,14 @@ class RegexDice {
                 ?: throw ParseException("Failed to parse expression '$expression'")
 
         return result.second.invoke(result.first)
+    }
+
+
+    fun validExpression(expression: String): Boolean {
+        val trimmedExpression = expression.trim()
+        return parsers.filter { it.key.matches(trimmedExpression) }
+                .filterKeys { true }
+                .isNotEmpty();
     }
 
     private fun visitInt(match: MatchResult): DiceExpression {
@@ -138,6 +148,12 @@ class RegexDice {
     private fun visitDiceFaceX(match: MatchResult): DiceExpression {
         val numberOfFaces = match.groupValues[1]
         return MultiplyExpression(visitDiceFace(numberOfFaces), visitDiceFace(numberOfFaces))
+    }
+
+    private fun visitNDiceFaceX(match: MatchResult): DiceExpression {
+        val numberOfFaces = match.groupValues[2].toInt()
+        val numberOfDice = match.groupValues[1].ifEmpty { "1" }.toInt()
+        return MultiplyExpression(NDice(numberOfFaces, numberOfDice), NDice(numberOfFaces, numberOfDice))
     }
 
     private fun visitAdd(match: MatchResult): DiceExpression {
@@ -197,7 +213,7 @@ class RegexDice {
     }
 
     fun comparisonFrom(text: String): Comparison {
-        return when(text) {
+        return when (text) {
             Comparison.GREATER_THAN.description -> Comparison.GREATER_THAN
             Comparison.LESS_THAN.description -> Comparison.LESS_THAN
             Comparison.EQUAL_TO.description -> Comparison.EQUAL_TO
@@ -232,7 +248,7 @@ class RegexDice {
         return rollTargetPool(numberOfDice, diceFace, comp, targetNumber)
     }
 
-    private fun rollTargetPool(numberOfDice: Int, numberOfFaces: Int, comp: String, targetNumber: Int): DiceExpression  {
+    private fun rollTargetPool(numberOfDice: Int, numberOfFaces: Int, comp: String, targetNumber: Int): DiceExpression {
         return TargetPoolDice(numberOfFaces, numberOfDice, comparisonFrom(comp), targetNumber)
     }
 
