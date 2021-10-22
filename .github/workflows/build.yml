@@ -40,6 +40,7 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: ${{ matrix.java }}
+          distribution: adopt
 
       - name: Build and Test
         run: ${{env.MVN_CMD}} verify
