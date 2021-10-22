@@ -25,7 +25,7 @@ on:
 
 jobs:
   build:
-    name: GraalVM - ${{ matrix.os }}
+    name: Java - ${{ matrix.java }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
