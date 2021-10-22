@@ -99,7 +99,7 @@ class RegexDice {
         val trimmedExpression = expression.trim()
         return parsers.filter { it.key.matches(trimmedExpression) }
                 .filterKeys { true }
-                .isNotEmpty();
+                .isNotEmpty()
     }
 
     private fun visitInt(match: MatchResult): DiceExpression {

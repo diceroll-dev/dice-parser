@@ -93,6 +93,7 @@ class RegexDiceTest {
         expect(66) { parse("d6+10*d6") }
         expect(66) { parse("d6*10+d6") }
         expect(38) { parse("2d6+2d8+10") }
+        expect(280) { parse("d10x+2d6x+d6x") }
     }
 
     @Test
@@ -141,8 +142,8 @@ class RegexDiceTest {
 
     @Test
     fun valid(){
-        expect(true){RegexDice().validExpression("4d6!!")}
-        expect(false){RegexDice().validExpression("4w6!!")}
+        expect(true, "4d6!! should be valid"){RegexDice().validExpression("4d6!!")}
+        expect(false, "4w6!! should be invalid"){RegexDice().validExpression("4w6!!")}
     }
 
     private fun parse(expression: String): Int {
