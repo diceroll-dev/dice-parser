@@ -92,12 +92,15 @@ class RegexDiceTest {
         expect(16) { parse("2d6+4d2k2") }
         expect(66) { parse("d6+10*d6") }
         expect(66) { parse("d6*10+d6") }
+        expect(38) { parse("2d6+2d8+10") }
+        expect(280) { parse("d10x+2d6x+d6x") }
     }
 
     @Test
     fun d10xTest() {
         expect(100) { parse("d10x") }
         expect(36) { parse("d6x") }
+        expect(144) { parse("2d6x") }
     }
 
     @Test
@@ -120,6 +123,7 @@ class RegexDiceTest {
         expect(4) { parse("4d8>6") }
         expect(0) { parse("4d8<6") }
         expect(4) { parse("(4d8-2)<6") }
+        expect(4) { parse("(4d8-2)>6") }
     }
 
     @Test
@@ -134,6 +138,12 @@ class RegexDiceTest {
         expect(58) { parse("4d6!!", rolls(2, 6, 6, 5, 2, 4, 5, 1, 2, 4, 5, 6, 1, 2, 3, 4)) }
         expect(27) { parse("2d6!!>5", rolls(2, 6, 6, 5, 3, 1, 2, 2)) }
         expect(11) { parse("2d6!!<1", rolls(2, 1, 6, 2)) }
+    }
+
+    @Test
+    fun valid(){
+        expect(true, "4d6!! should be valid"){RegexDice().validExpression("4d6!!")}
+        expect(false, "4w6!! should be invalid"){RegexDice().validExpression("4w6!!")}
     }
 
     private fun parse(expression: String): Int {
