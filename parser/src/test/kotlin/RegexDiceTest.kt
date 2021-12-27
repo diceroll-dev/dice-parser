@@ -136,6 +136,13 @@ class RegexDiceTest {
         expect(11) { parse("2d6!!<1", rolls(2, 1, 6, 2)) }
     }
 
+    @Test
+    fun keepLow() {
+        expect(2) { parse("4d6l1", rolls(2, 6, 6, 5)) }
+        expect(7) { parse("4d6l2", rolls(2, 6, 6, 5)) }
+        expect(2) { parse("2d20l1", rolls(2, 19)) }
+    }
+
     private fun parse(expression: String): Int {
         val diceExpression = RegexDice().parse(expression)
         val result = DiceRollingVisitor { it }.visit(diceExpression)
