@@ -66,24 +66,37 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
     }
 
     override fun visit(sortedDiceExpression: SortedDiceExpression): ResultTree {
-
         val resultTree = orderResultTree(visit(sortedDiceExpression.value), sortedDiceExpression.sortAscending)
-
         return ResultTree(sortedDiceExpression, resultTree.value, resultTree.results)
     }
 
     private fun orderResultTree(resultTree: ResultTree, ascending: Boolean): ResultTree {
+        val orderComparator = if (ascending) Comparator.comparing(ResultTree::value) else Comparator.comparing(ResultTree::value).reversed()
         val results = resultTree.results.stream()
                 .map { r -> orderResultTree(r, ascending) }
-                .sorted(Comparator { o1, o2 ->
-                    if (ascending) {
-                        return@Comparator o1.value.compareTo(o2.value)
-                    } else {
-                        return@Comparator o2.value.compareTo(o1.value)
-                    }
-                })
+                .sorted(orderComparator)
                 .collect(Collectors.toList())
         return ResultTree(resultTree.expression, resultTree.value, results)
+    }
+
+    override fun visit(minDiceExpression: MinDiceExpression): ResultTree {
+        val left = visit(minDiceExpression.left)
+        val right = visit(minDiceExpression.right)
+        return if(left.value > right.value){
+            right
+        } else {
+            left
+        }
+    }
+
+    override fun visit(maxDiceExpression: MaxDiceExpression): ResultTree {
+        val left = visit(maxDiceExpression.left)
+        val right = visit(maxDiceExpression.right)
+        return if(left.value > right.value){
+            left
+        } else {
+            right
+        }
     }
 
     override fun visit(nDice: NDice): ResultTree {

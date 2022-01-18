@@ -129,6 +129,18 @@ class SortedDiceExpression(val value: DiceExpression, val sortAscending: Boolean
     }
 }
 
+class MinDiceExpression(val left: DiceExpression, val right: DiceExpression) : DiceExpression {
+    override fun description(): String {
+        return "min(" + left.description() + "," + right + ")"
+    }
+}
+
+class MaxDiceExpression(val left: DiceExpression, val right: DiceExpression) : DiceExpression {
+    override fun description(): String {
+        return "max(" + left.description() + "," + right + ")"
+    }
+}
+
 interface DiceExpression {
     fun description(): String
 }

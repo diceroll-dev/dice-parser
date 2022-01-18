@@ -58,6 +58,8 @@ class RegexDice {
         private val SUB = "(?<left>.+)-(?<right>.+)".toRegex() // exp - exp
         private val NEGATIVE = "-.+".toRegex() // -
         private val SORT = "(.+)(asc|desc)".toRegex() // sorting
+        private val MIN = "(?<left>.+)min(?<right>.+)".toRegex() // 10min1d6
+        private val MAX = "(?<left>.+)max(?<right>.+)".toRegex() // 10max1d6
     }
 
     val parsers = linkedMapOf(
@@ -78,6 +80,8 @@ class RegexDice {
             EXPLODE_DICE_TARGET.toRegex() to this::visitExplodeTarget,
             TARGET_POOL.toRegex() to this::visitTargetPool,
             TARGET_POOL_PARENS.toRegex() to this::visitTargetPoolMod,
+            MIN to this::visitMin,
+            MAX to this::visitMax,
             NESTED to this::visitNested,
             ADD to this::visitAdd,
             SUB to this::visitSubtract,
@@ -307,5 +311,17 @@ class RegexDice {
         val diceExpression = match.groupValues[1]
         val order = match.groupValues[2]
         return SortedDiceExpression(parse(diceExpression), order == "asc")
+    }
+
+    private fun visitMin(match: MatchResult): DiceExpression { //10min1d6
+        val left = match.groupValues[1]
+        val right = match.groupValues[2]
+        return MinDiceExpression(parse(left), parse(right))
+    }
+
+    private fun visitMax(match: MatchResult): DiceExpression { // 10max1d6
+        val left = match.groupValues[1]
+        val right = match.groupValues[2]
+        return MaxDiceExpression(parse(left), parse(right))
     }
 }
