@@ -65,7 +65,7 @@ val result: Int = resultTree.value()
 | Multiply                      | `<left> * <right>`                                  | `1d4 * 2d6`     |                                                                                                                             |
 | Divide                        | `<left> / <right>`                                  | `4 / 2`         |                                                                                                                             |
 | Negative                      | `-<diceExpression>`                                 | `-1d6`          | multiplies the result of the dice expression with -1                                                                        |
-| Oder                          | `<diceExpression>[asc, desc]`                       | `10d10asc`      | ordering the results of the dice ascending (`asc`) or descending (`desc`)                                                   |
+| Order                          | `<diceExpression>[asc, desc]`                      | `10d10asc`      | ordering the results of the dice ascending (`asc`) or descending (`desc`)                                                   |
 | Min/Max                       | `<diceExpression>[min, max]<diceExpression>`        | `2d6min(1d6+3)` | returns the minimum or maximum of two dice expressions, e.g. `2d6min(1d6+3)` returns the smaller value of `2d6` and `1d6+3` |
 
 ## Dependency Information
