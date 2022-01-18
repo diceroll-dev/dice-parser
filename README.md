@@ -63,6 +63,7 @@ val result: Int = resultTree.value()
 | Multiply                      | `<left> * <right>`                                  | `1d4 * 2d6` |                                                                                                                  |
 | Divide                        | `<left> / <right>`                                  | `4 / 2`     |                                                                                                                  |
 | Negative                      | `-<diceExpression>`                                 | `-1d6`      | multiplies the result of the dice expression with -1                                                             |
+| Negative                      | `<diceExpression>[asc, desc]`                       | `10d10asc`  | ordering the results of the dice ascending (`asc`) or descending (`desc`)                                            |
 
 ## Dependency Information
 

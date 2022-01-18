@@ -31,6 +31,7 @@ interface DiceVisitor<T> {
             is KeepDice -> visit(diceExpression)
             is KeepLowDice -> visit(diceExpression)
             is NegativeDiceExpression -> visit(diceExpression)
+            is SortedDiceExpression -> visit(diceExpression)
             else -> throw NotImplementedError("Could not visit unknown type: ${diceExpression::class}")
         }
     }
@@ -56,4 +57,6 @@ interface DiceVisitor<T> {
     fun visit(keepLowDice: KeepLowDice): T
 
     fun visit(negativeDiceExpression: NegativeDiceExpression): T
+
+    fun visit(sortedDiceExpression: SortedDiceExpression): T
 }
