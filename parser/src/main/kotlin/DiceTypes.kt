@@ -15,7 +15,7 @@
  */
 package dev.diceroll.parser
 
-class NDice(numberOfFaces: Int, numberOfDice: Int = 1): BaseDiceExpression(numberOfFaces, numberOfDice) {
+class NDice(numberOfFaces: Int, numberOfDice: Int = 1) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         val prefix = when (numberOfDice) {
             1 -> ""
@@ -25,7 +25,7 @@ class NDice(numberOfFaces: Int, numberOfDice: Int = 1): BaseDiceExpression(numbe
     }
 }
 
-class DiceX(numberOfFaces: Int, numberOfDice: Int): BaseDiceExpression(numberOfFaces, numberOfDice) {
+class DiceX(numberOfFaces: Int, numberOfDice: Int) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         val prefix = when (numberOfDice) {
             1 -> ""
@@ -35,9 +35,9 @@ class DiceX(numberOfFaces: Int, numberOfDice: Int): BaseDiceExpression(numberOfF
     }
 }
 
-class FudgeDice(val numberOfDice: Int = 1, val numberOfFaces: Int = 6, val weight: Int = numberOfFaces/3): DiceExpression {
+class FudgeDice(val numberOfDice: Int = 1, val numberOfFaces: Int = 6, val weight: Int = numberOfFaces / 3) : DiceExpression {
     override fun description(): String {
-        val extra = if (weight != numberOfFaces/3) {
+        val extra = if (weight != numberOfFaces / 3) {
             ".${weight}"
         } else {
             ""
@@ -46,19 +46,19 @@ class FudgeDice(val numberOfDice: Int = 1, val numberOfFaces: Int = 6, val weigh
     }
 }
 
-class KeepDice(numberOfFaces: Int, numberOfDice: Int, val numberToKeep: Int): BaseDiceExpression(numberOfFaces, numberOfDice) {
+class KeepDice(numberOfFaces: Int, numberOfDice: Int, val numberToKeep: Int) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         return "${numberOfDice}d${numberOfFaces}k${numberToKeep}"
     }
 }
 
-class KeepLowDice(numberOfFaces: Int, numberOfDice: Int, val numberToKeep: Int): BaseDiceExpression(numberOfFaces, numberOfDice) {
+class KeepLowDice(numberOfFaces: Int, numberOfDice: Int, val numberToKeep: Int) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         return "${numberOfDice}d${numberOfFaces}l${numberToKeep}"
     }
 }
 
-class ExplodingDice(numberOfFaces: Int, numberOfDice: Int, val comparison: Comparison=Comparison.EQUAL_TO, val target: Int = numberOfFaces): BaseDiceExpression(numberOfFaces, numberOfDice) {
+class ExplodingDice(numberOfFaces: Int, numberOfDice: Int, val comparison: Comparison = Comparison.EQUAL_TO, val target: Int = numberOfFaces) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         val extra = if (numberOfFaces == target && comparison == Comparison.EQUAL_TO) {
             ""
@@ -71,7 +71,7 @@ class ExplodingDice(numberOfFaces: Int, numberOfDice: Int, val comparison: Compa
 
 class CompoundingDice(numberOfFaces: Int, numberOfDice: Int,
                       val comparison: Comparison = Comparison.EQUAL_TO,
-                      val target: Int = numberOfFaces): BaseDiceExpression(numberOfFaces, numberOfDice) {
+                      val target: Int = numberOfFaces) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         val extra = if (numberOfFaces == target && comparison == Comparison.EQUAL_TO) {
             ""
@@ -86,7 +86,7 @@ class TargetPoolDice(numberOfFaces: Int,
                      numberOfDice: Int,
                      val comparison: Comparison,
                      val target: Int,
-                     val modifier: Int =0): BaseDiceExpression(numberOfFaces, numberOfDice) {
+                     val modifier: Int = 0) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         return if (modifier == 0) {
             "${numberOfDice}d${numberOfFaces}${comparison.description}${target}"
@@ -99,16 +99,16 @@ class TargetPoolDice(numberOfFaces: Int,
     }
 }
 
-open class MathExpression(val left: DiceExpression, val operation: Operation, val right: DiceExpression): DiceExpression {
+open class MathExpression(val left: DiceExpression, val operation: Operation, val right: DiceExpression) : DiceExpression {
     override fun description(): String {
         return "${left.description()} ${operation.description} ${right.description()}"
     }
 }
 
-class AddExpression(left: DiceExpression, right: DiceExpression): MathExpression(left, Operation.ADD, right)
-class SubtractExpression(left: DiceExpression, right: DiceExpression): MathExpression(left, Operation.SUBTRACT, right)
-class MultiplyExpression(left: DiceExpression, right: DiceExpression): MathExpression(left, Operation.MULTIPLY, right)
-class DivideExpression(left: DiceExpression, right: DiceExpression): MathExpression(left, Operation.DIVIDE, right)
+class AddExpression(left: DiceExpression, right: DiceExpression) : MathExpression(left, Operation.ADD, right)
+class SubtractExpression(left: DiceExpression, right: DiceExpression) : MathExpression(left, Operation.SUBTRACT, right)
+class MultiplyExpression(left: DiceExpression, right: DiceExpression) : MathExpression(left, Operation.MULTIPLY, right)
+class DivideExpression(left: DiceExpression, right: DiceExpression) : MathExpression(left, Operation.DIVIDE, right)
 
 class NumberExpression(val value: Int) : DiceExpression {
     override fun description(): String {
@@ -116,8 +116,14 @@ class NumberExpression(val value: Int) : DiceExpression {
     }
 }
 
+class NegativeDiceExpression(val value: DiceExpression) : DiceExpression {
+    override fun description(): String {
+        return "-" + value.description()
+    }
+}
+
 interface DiceExpression {
     fun description(): String
 }
 
-abstract class BaseDiceExpression(val numberOfFaces: Int, val numberOfDice: Int): DiceExpression
+abstract class BaseDiceExpression(val numberOfFaces: Int, val numberOfDice: Int) : DiceExpression

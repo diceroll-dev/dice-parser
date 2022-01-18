@@ -15,6 +15,7 @@
  */
 package dev.diceroll.parser
 
+
 interface DiceVisitor<T> {
 
     fun visit(diceExpression: DiceExpression): T {
@@ -29,6 +30,7 @@ interface DiceVisitor<T> {
             is TargetPoolDice -> visit(diceExpression)
             is KeepDice -> visit(diceExpression)
             is KeepLowDice -> visit(diceExpression)
+            is NegativeDiceExpression -> visit(diceExpression)
             else -> throw NotImplementedError("Could not visit unknown type: ${diceExpression::class}")
         }
     }
@@ -52,4 +54,6 @@ interface DiceVisitor<T> {
     fun visit(targetPoolDice: TargetPoolDice): T
 
     fun visit(keepLowDice: KeepLowDice): T
+
+    fun visit(negativeDiceExpression: NegativeDiceExpression): T
 }

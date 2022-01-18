@@ -62,6 +62,7 @@ val result: Int = resultTree.value()
 | Subtract                      | `<left> - <right>`                                  | `2 - 1`     |                                                                                                                  |
 | Multiply                      | `<left> * <right>`                                  | `1d4 * 2d6` |                                                                                                                  |
 | Divide                        | `<left> / <right>`                                  | `4 / 2`     |                                                                                                                  |
+| Negative                      | `-<diceExpression>`                                 | `-1d6`      | multiplies the result of the dice expression with -1                                                             |
 
 ## Dependency Information
 
