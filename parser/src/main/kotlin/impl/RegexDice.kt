@@ -50,12 +50,13 @@ class RegexDice {
         private val KEEP_DICE = Regex("$N_DICE_FACE$K(?<keep>$INT)") // 4d6k2
         private val KEEP_LOW_DICE = Regex("$N_DICE_FACE$L(?<keep>$INT)") // 4d6k2
         private val TARGET_POOL = "$N_DICE_FACE(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // 4d10>6
-        private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[\\+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
+        private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
         private val NESTED = "(?<LEFT>.*)$LPAREN(?<NESTED>.*)$RPAREN(?<RIGHT>.*)".toRegex() // 10(2) or (2) or 10(2)4
-        private val MUL = "(?<left>.*)\\*(?<right>.*)".toRegex() // exp * exp
-        private val DIV = "(?<left>.*)/(?<right>.*)".toRegex() // exp / exp
-        private val ADD = "(?<left>.*)\\+(?<right>.*)".toRegex() // exp + exp
-        private val SUB = "(?<left>.*)-(?<right>.*)".toRegex() // exp - exp
+        private val MUL = "(?<left>.+)\\*(?<right>.+)".toRegex() // exp * exp
+        private val DIV = "(?<left>.+)/(?<right>.+)".toRegex() // exp / exp
+        private val ADD = "(?<left>.+)\\+(?<right>.+)".toRegex() // exp + exp
+        private val SUB = "(?<left>.+)-(?<right>.+)".toRegex() // exp - exp
+        private val NEGATIVE = "-.+".toRegex() // -
     }
 
     val parsers = linkedMapOf(
@@ -81,7 +82,8 @@ class RegexDice {
             SUB to this::visitSubtract,
             MUL to this::visitMultiply,
             DIV to this::visitDivide,
-            INT.toRegex() to this::visitInt
+            INT.toRegex() to this::visitInt,
+            NEGATIVE to this::visitNegative
     )
 
     fun parse(expression: String): DiceExpression {
@@ -294,5 +296,9 @@ class RegexDice {
         val target = match.groupValues[4].toInt()
 
         return ExplodingDice(numberOfFaces, numberOfDice, comparisonFrom(comp), target)
+    }
+
+    private fun visitNegative(match: MatchResult): DiceExpression { // -1, -1d6
+        return NegativeDiceExpression(parse(match.value.trim().substring(1)))
     }
 }

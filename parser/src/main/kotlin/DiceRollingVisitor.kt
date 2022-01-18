@@ -15,6 +15,7 @@
  */
 package dev.diceroll.parser
 
+import java.util.stream.Collectors
 import kotlin.random.Random
 
 private val defaultRandomGenerator: (Int) -> Int = { numberOfFaces: Int ->
@@ -23,7 +24,7 @@ private val defaultRandomGenerator: (Int) -> Int = { numberOfFaces: Int ->
 
 class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisitor<ResultTree> {
 
-    constructor(): this(defaultRandomGenerator)
+    constructor() : this(defaultRandomGenerator)
 
     private fun random(numberOfFaces: Int): Int {
         return randomGenerator.invoke(numberOfFaces)
@@ -38,7 +39,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         val left = visit(mathExpressionResult.left)
         val right = visit(mathExpressionResult.right)
 
-        val result = when(mathExpressionResult.operation) {
+        val result = when (mathExpressionResult.operation) {
             Operation.ADD -> left.value + right.value
             Operation.SUBTRACT -> left.value - right.value
             Operation.MULTIPLY -> left.value * right.value
@@ -48,10 +49,26 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         return ResultTree(mathExpressionResult, result, listOf(left, right))
     }
 
+    override fun visit(negativeDiceExpression: NegativeDiceExpression): ResultTree {
+
+        val resultTree = makeNegative(visit(negativeDiceExpression.value))
+
+        return ResultTree(negativeDiceExpression, resultTree.value, resultTree.results)
+    }
+
+    private fun makeNegative(resultTree: ResultTree): ResultTree {
+        val expression = resultTree.expression
+        val value = resultTree.value * -1
+        val results = resultTree.results.stream()
+                .map { r -> makeNegative(r) }
+                .collect(Collectors.toList())
+        return ResultTree(expression, value, results)
+    }
+
     override fun visit(nDice: NDice): ResultTree {
         val values = IntRange(1, nDice.numberOfDice)
                 .map { random(nDice.numberOfFaces) }
-                .map { ResultTree(NDice(nDice.numberOfFaces), it)}
+                .map { ResultTree(NDice(nDice.numberOfFaces), it) }
 
         return ResultTree(nDice, values.map { it.value }.sum(), values)
     }
@@ -67,7 +84,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
     override fun visit(fudgeDice: FudgeDice): ResultTree {
         val values = IntRange(1, fudgeDice.numberOfDice)
                 .map { doFudgeRoll(fudgeDice.numberOfFaces, fudgeDice.weight) }
-                .map { ResultTree(FudgeDice(1, fudgeDice.numberOfFaces, fudgeDice.weight), it)}
+                .map { ResultTree(FudgeDice(1, fudgeDice.numberOfFaces, fudgeDice.weight), it) }
 
         return ResultTree(fudgeDice, values.map { it.value }.sum(), values)
     }
@@ -75,7 +92,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
     override fun visit(keepDice: KeepDice): ResultTree {
         val values = IntRange(1, keepDice.numberOfDice)
                 .map { random(keepDice.numberOfFaces) }
-                .map { ResultTree(NDice(keepDice.numberOfFaces), it)}
+                .map { ResultTree(NDice(keepDice.numberOfFaces), it) }
 
         return ResultTree(keepDice, values.map { it.value }.sorted().reversed().take(keepDice.numberToKeep).sum(), values)
     }
@@ -83,28 +100,28 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
     override fun visit(keepLowDice: KeepLowDice): ResultTree {
         val values = IntRange(1, keepLowDice.numberOfDice)
                 .map { random(keepLowDice.numberOfFaces) }
-                .map { ResultTree(NDice(keepLowDice.numberOfFaces), it)}
+                .map { ResultTree(NDice(keepLowDice.numberOfFaces), it) }
 
         return ResultTree(keepLowDice, values.map { it.value }.sorted().take(keepLowDice.numberToKeep).sum(), values)
     }
 
     override fun visit(explodingDice: ExplodingDice): ResultTree {
         val values = explodeRoll(explodingDice.numberOfDice, explodingDice.numberOfFaces, predicate(explodingDice.comparison, explodingDice.target))
-                .map { ResultTree(NDice(explodingDice.numberOfFaces), it)}
+                .map { ResultTree(NDice(explodingDice.numberOfFaces), it) }
         return ResultTree(explodingDice, values.map { it.value }.sum(), values)
     }
 
     override fun visit(compoundingDice: CompoundingDice): ResultTree {
 
         val values = compoundRoll(compoundingDice.numberOfDice, compoundingDice.numberOfFaces, predicate(compoundingDice.comparison, compoundingDice.target), 100)
-                .map { ResultTree(NDice(compoundingDice.numberOfFaces), it)}
+                .map { ResultTree(NDice(compoundingDice.numberOfFaces), it) }
         return ResultTree(compoundingDice, values.map { it.value }.sum(), values)
     }
 
     override fun visit(targetPoolDice: TargetPoolDice): ResultTree {
         val values = IntRange(1, targetPoolDice.numberOfDice)
                 .map { random(targetPoolDice.numberOfFaces) }
-                .map { ResultTree(NDice(targetPoolDice.numberOfFaces), it)}
+                .map { ResultTree(NDice(targetPoolDice.numberOfFaces), it) }
         val value = values.map { it.value }.filter(predicate(targetPoolDice.comparison, targetPoolDice.target)).count()
         return ResultTree(targetPoolDice, value, values)
     }
@@ -151,17 +168,27 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
 
     private fun predicate(comparison: Comparison, target: Int): (Int) -> Boolean {
         return when (comparison) {
-            Comparison.GREATER_THAN -> {{ it >= target }}
-            Comparison.LESS_THAN -> {{ it <= target }}
-            Comparison.EQUAL_TO -> {{ it == target }}
+            Comparison.GREATER_THAN -> {
+                { it >= target }
+            }
+            Comparison.LESS_THAN -> {
+                { it <= target }
+            }
+            Comparison.EQUAL_TO -> {
+                { it == target }
+            }
         }
     }
 
-    private fun doFudgeRoll(sides: Int = 6, weight: Int = sides/3): Int {
+    private fun doFudgeRoll(sides: Int = 6, weight: Int = sides / 3): Int {
         val random = random(sides)
         return when {
-            random > sides - weight -> { 1 }
-            random > sides - weight * 2 -> { -1 }
+            random > sides - weight -> {
+                1
+            }
+            random > sides - weight * 2 -> {
+                -1
+            }
             else -> 0
         }
     }
