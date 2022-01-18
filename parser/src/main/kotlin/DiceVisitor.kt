@@ -19,7 +19,7 @@ package dev.diceroll.parser
 interface DiceVisitor<T> {
 
     fun visit(diceExpression: DiceExpression): T {
-        return when(diceExpression) {
+        return when (diceExpression) {
             is NumberExpression -> visit(diceExpression)
             is MathExpression -> visit(diceExpression)
             is NDice -> visit(diceExpression)
@@ -32,6 +32,8 @@ interface DiceVisitor<T> {
             is KeepLowDice -> visit(diceExpression)
             is NegativeDiceExpression -> visit(diceExpression)
             is SortedDiceExpression -> visit(diceExpression)
+            is MinDiceExpression -> visit(diceExpression)
+            is MaxDiceExpression -> visit(diceExpression)
             else -> throw NotImplementedError("Could not visit unknown type: ${diceExpression::class}")
         }
     }
@@ -59,4 +61,8 @@ interface DiceVisitor<T> {
     fun visit(negativeDiceExpression: NegativeDiceExpression): T
 
     fun visit(sortedDiceExpression: SortedDiceExpression): T
+
+    fun visit(minDiceExpression: MinDiceExpression): T
+
+    fun visit(maxDiceExpression: MaxDiceExpression): T
 }

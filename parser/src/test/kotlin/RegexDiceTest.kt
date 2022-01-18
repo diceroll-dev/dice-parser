@@ -178,6 +178,29 @@ class RegexDiceTest {
         expect(listOf(-2, 2)) { getResults("-2 + 2 asc", rolls()) }
     }
 
+    @Test
+    fun min() {
+        expect(-3) { parse("-3min-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(-2) { parse("3min-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(2) { parse("2 min 100", rolls()) }
+        expect(2) { parse("2 min 2", rolls()) }
+        expect(2) { parse("2 min 100 + 2d6", rolls(2, 6)) }
+        expect(2) { parse("2 min (100 + 2d6)", rolls(2, 6)) }
+        expect(2) { parse("(100 + 2d6) min 2 ", rolls(2, 6)) }
+        expect(4) { parse("(100 + 2d6) min (2 *2)", rolls(2, 6)) }
+    }
+
+    @Test
+    fun max() {
+        expect(-2) { parse("-3max-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(3) { parse("3max-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(100) { parse("2 max 100", rolls(2, 6)) }
+        expect(2) { parse("2 max 2", rolls(2, 6)) }
+        expect(108) { parse("2 max 100 + 2d6", rolls(2, 6)) }
+        expect(108) { parse("2 max (100 + 2d6)", rolls(2, 6)) }
+        expect(108) { parse("(100 + 2d6) max 2", rolls(2, 6)) }
+        expect(108) { parse("(100 + 2d6) max (2 *2)", rolls(2, 6)) }
+    }
 
     private fun parse(expression: String): Int {
         val diceExpression = RegexDice().parse(expression)
