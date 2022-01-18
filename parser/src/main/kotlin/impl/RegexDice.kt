@@ -57,10 +57,11 @@ class RegexDice {
         private val ADD = "(?<left>.+)\\+(?<right>.+)".toRegex() // exp + exp
         private val SUB = "(?<left>.+)-(?<right>.+)".toRegex() // exp - exp
         private val NEGATIVE = "-.+".toRegex() // -
+        private val SORT = "(.+)(asc|desc)".toRegex() // sorting
     }
 
     val parsers = linkedMapOf(
-
+            SORT to this::visitSort,
             N_DICE_FACE.toRegex() to this::visitNDiceFace,
             KEEP_DICE to this::visitKeepDice,
             KEEP_LOW_DICE to this::visitKeepLowDice,
@@ -82,8 +83,8 @@ class RegexDice {
             SUB to this::visitSubtract,
             MUL to this::visitMultiply,
             DIV to this::visitDivide,
-            INT.toRegex() to this::visitInt,
-            NEGATIVE to this::visitNegative
+            NEGATIVE to this::visitNegative,
+            INT.toRegex() to this::visitInt
     )
 
     fun parse(expression: String): DiceExpression {
@@ -300,5 +301,11 @@ class RegexDice {
 
     private fun visitNegative(match: MatchResult): DiceExpression { // -1, -1d6
         return NegativeDiceExpression(parse(match.value.trim().substring(1)))
+    }
+
+    private fun visitSort(match: MatchResult): DiceExpression { // asc or desc
+        val diceExpression = match.groupValues[1]
+        val order = match.groupValues[2]
+        return SortedDiceExpression(parse(diceExpression), order == "asc")
     }
 }

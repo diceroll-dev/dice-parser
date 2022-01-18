@@ -122,6 +122,13 @@ class NegativeDiceExpression(val value: DiceExpression) : DiceExpression {
     }
 }
 
+class SortedDiceExpression(val value: DiceExpression, val sortAscending: Boolean) : DiceExpression {
+    override fun description(): String {
+        val order = if (sortAscending) "asc" else "desc"
+        return value.description() + " " + order
+    }
+}
+
 interface DiceExpression {
     fun description(): String
 }

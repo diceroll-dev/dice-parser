@@ -65,6 +65,27 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         return ResultTree(expression, value, results)
     }
 
+    override fun visit(sortedDiceExpression: SortedDiceExpression): ResultTree {
+
+        val resultTree = orderResultTree(visit(sortedDiceExpression.value), sortedDiceExpression.sortAscending)
+
+        return ResultTree(sortedDiceExpression, resultTree.value, resultTree.results)
+    }
+
+    private fun orderResultTree(resultTree: ResultTree, ascending: Boolean): ResultTree {
+        val results = resultTree.results.stream()
+                .map { r -> orderResultTree(r, ascending) }
+                .sorted(Comparator { o1, o2 ->
+                    if (ascending) {
+                        return@Comparator o1.value.compareTo(o2.value)
+                    } else {
+                        return@Comparator o2.value.compareTo(o1.value)
+                    }
+                })
+                .collect(Collectors.toList())
+        return ResultTree(resultTree.expression, resultTree.value, results)
+    }
+
     override fun visit(nDice: NDice): ResultTree {
         val values = IntRange(1, nDice.numberOfDice)
                 .map { random(nDice.numberOfFaces) }
