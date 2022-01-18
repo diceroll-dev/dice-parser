@@ -50,16 +50,20 @@ class RegexDice {
         private val KEEP_DICE = Regex("$N_DICE_FACE$K(?<keep>$INT)") // 4d6k2
         private val KEEP_LOW_DICE = Regex("$N_DICE_FACE$L(?<keep>$INT)") // 4d6k2
         private val TARGET_POOL = "$N_DICE_FACE(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // 4d10>6
-        private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[\\+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
+        private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
         private val NESTED = "(?<LEFT>.*)$LPAREN(?<NESTED>.*)$RPAREN(?<RIGHT>.*)".toRegex() // 10(2) or (2) or 10(2)4
-        private val MUL = "(?<left>.*)\\*(?<right>.*)".toRegex() // exp * exp
-        private val DIV = "(?<left>.*)/(?<right>.*)".toRegex() // exp / exp
-        private val ADD = "(?<left>.*)\\+(?<right>.*)".toRegex() // exp + exp
-        private val SUB = "(?<left>.*)-(?<right>.*)".toRegex() // exp - exp
+        private val MUL = "(?<left>.+)\\*(?<right>.+)".toRegex() // exp * exp
+        private val DIV = "(?<left>.+)/(?<right>.+)".toRegex() // exp / exp
+        private val ADD = "(?<left>.+)\\+(?<right>.+)".toRegex() // exp + exp
+        private val SUB = "(?<left>.+)-(?<right>.+)".toRegex() // exp - exp
+        private val NEGATIVE = "-.+".toRegex() // -
+        private val SORT = "(.+)(asc|desc)".toRegex() // sorting
+        private val MIN = "(?<left>.+)min(?<right>.+)".toRegex() // 10min1d6
+        private val MAX = "(?<left>.+)max(?<right>.+)".toRegex() // 10max1d6
     }
 
     val parsers = linkedMapOf(
-
+            SORT to this::visitSort,
             N_DICE_FACE.toRegex() to this::visitNDiceFace,
             KEEP_DICE to this::visitKeepDice,
             KEEP_LOW_DICE to this::visitKeepLowDice,
@@ -76,11 +80,14 @@ class RegexDice {
             EXPLODE_DICE_TARGET.toRegex() to this::visitExplodeTarget,
             TARGET_POOL.toRegex() to this::visitTargetPool,
             TARGET_POOL_PARENS.toRegex() to this::visitTargetPoolMod,
+            MIN to this::visitMin,
+            MAX to this::visitMax,
             NESTED to this::visitNested,
             ADD to this::visitAdd,
             SUB to this::visitSubtract,
             MUL to this::visitMultiply,
             DIV to this::visitDivide,
+            NEGATIVE to this::visitNegative,
             INT.toRegex() to this::visitInt
     )
 
@@ -294,5 +301,27 @@ class RegexDice {
         val target = match.groupValues[4].toInt()
 
         return ExplodingDice(numberOfFaces, numberOfDice, comparisonFrom(comp), target)
+    }
+
+    private fun visitNegative(match: MatchResult): DiceExpression { // -1, -1d6
+        return NegativeDiceExpression(parse(match.value.trim().substring(1)))
+    }
+
+    private fun visitSort(match: MatchResult): DiceExpression { // asc or desc
+        val diceExpression = match.groupValues[1]
+        val order = match.groupValues[2]
+        return SortedDiceExpression(parse(diceExpression), order == "asc")
+    }
+
+    private fun visitMin(match: MatchResult): DiceExpression { //10min1d6
+        val left = match.groupValues[1]
+        val right = match.groupValues[2]
+        return MinDiceExpression(parse(left), parse(right))
+    }
+
+    private fun visitMax(match: MatchResult): DiceExpression { // 10max1d6
+        val left = match.groupValues[1]
+        val right = match.groupValues[2]
+        return MaxDiceExpression(parse(left), parse(right))
     }
 }
