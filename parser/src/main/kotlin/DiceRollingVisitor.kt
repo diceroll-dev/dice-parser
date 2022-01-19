@@ -82,21 +82,23 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
     override fun visit(minDiceExpression: MinDiceExpression): ResultTree {
         val left = visit(minDiceExpression.left)
         val right = visit(minDiceExpression.right)
-        return if(left.value > right.value){
-            right
+        val value = if (left.value > right.value) {
+            right.value
         } else {
-            left
+            left.value
         }
+        return ResultTree(minDiceExpression, value, listOf(left, right))
     }
 
     override fun visit(maxDiceExpression: MaxDiceExpression): ResultTree {
         val left = visit(maxDiceExpression.left)
         val right = visit(maxDiceExpression.right)
-        return if(left.value > right.value){
-            left
+        val value = if (left.value > right.value) {
+            left.value
         } else {
-            right
+            right.value
         }
+        return ResultTree(maxDiceExpression, value, listOf(left, right))
     }
 
     override fun visit(nDice: NDice): ResultTree {
