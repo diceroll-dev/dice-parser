@@ -17,6 +17,7 @@ package dev.diceroll.parser.impl
 
 import dev.diceroll.parser.DiceRollingVisitor
 import dev.diceroll.parser.ResultTree
+import org.testng.Assert.assertThrows
 import java.util.stream.Collectors
 import kotlin.test.Test
 import kotlin.test.expect
@@ -65,6 +66,21 @@ class RegexDiceTest {
         expect(12) { parse("2d6") }
         expect(18) { parse("(1+2)d6") }
     }
+
+    @Test
+    fun overflowRoll() {
+        assertThrows(ArithmeticException::class.java) {
+            parse("1000000d1000000")
+        }
+    }
+
+    @Test
+    fun overflowSum() {
+        assertThrows(ArithmeticException::class.java) {
+            parse(Int.MAX_VALUE.toString() + "+" + Int.MAX_VALUE.toString())
+        }
+    }
+
 
     @Test
     fun complexRoll() {

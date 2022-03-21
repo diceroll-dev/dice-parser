@@ -35,9 +35,9 @@ class DiceX(numberOfFaces: Int, numberOfDice: Int) : BaseDiceExpression(numberOf
     }
 }
 
-class FudgeDice(val numberOfDice: Int = 1, val numberOfFaces: Int = 6, val weight: Int = numberOfFaces / 3) : DiceExpression {
+class FudgeDice(val numberOfDice: Int = 1, val numberOfFaces: Int = 6, val weight: Int = Math.floorDiv(numberOfFaces, 3)) : DiceExpression {
     override fun description(): String {
-        val extra = if (weight != numberOfFaces / 3) {
+        val extra = if (weight != Math.floorDiv(numberOfFaces, 3)) {
             ".${weight}"
         } else {
             ""
