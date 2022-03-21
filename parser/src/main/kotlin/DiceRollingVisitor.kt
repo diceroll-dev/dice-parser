@@ -40,10 +40,10 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         val right = visit(mathExpressionResult.right)
 
         val result = when (mathExpressionResult.operation) {
-            Operation.ADD -> left.value + right.value
-            Operation.SUBTRACT -> left.value - right.value
-            Operation.MULTIPLY -> left.value * right.value
-            Operation.DIVIDE -> left.value / right.value
+            Operation.ADD -> Math.addExact(left.value, right.value)
+            Operation.SUBTRACT -> Math.subtractExact(left.value, right.value)
+            Operation.MULTIPLY -> Math.multiplyExact(left.value, right.value)
+            Operation.DIVIDE -> Math.floorDiv(left.value, right.value)
         }
 
         return ResultTree(mathExpressionResult, result, listOf(left, right))
@@ -58,7 +58,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
 
     private fun makeNegative(resultTree: ResultTree): ResultTree {
         val expression = resultTree.expression
-        val value = resultTree.value * -1
+        val value = Math.multiplyExact(resultTree.value, -1)
         val results = resultTree.results.stream()
                 .map { r -> makeNegative(r) }
                 .collect(Collectors.toList())
@@ -106,7 +106,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
                 .map { random(nDice.numberOfFaces) }
                 .map { ResultTree(NDice(nDice.numberOfFaces), it) }
 
-        return ResultTree(nDice, values.map { it.value }.sum(), values)
+        return ResultTree(nDice, values.map { it.value }.stream().reduce { x, y -> Math.addExact(x, y) }.get(), values)
     }
 
     override fun visit(diceX: DiceX): ResultTree {
@@ -114,7 +114,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         val left = visit(nDice)
         val right = visit(nDice)
 
-        return ResultTree(diceX, left.value * right.value, listOf(left, right))
+        return ResultTree(diceX, Math.multiplyExact(left.value, right.value), listOf(left, right))
     }
 
     override fun visit(fudgeDice: FudgeDice): ResultTree {
@@ -122,7 +122,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
                 .map { doFudgeRoll(fudgeDice.numberOfFaces, fudgeDice.weight) }
                 .map { ResultTree(FudgeDice(1, fudgeDice.numberOfFaces, fudgeDice.weight), it) }
 
-        return ResultTree(fudgeDice, values.map { it.value }.sum(), values)
+        return ResultTree(fudgeDice, values.map { it.value }.stream().reduce { x, y -> Math.addExact(x, y) }.get(), values)
     }
 
     override fun visit(keepDice: KeepDice): ResultTree {
@@ -130,7 +130,7 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
                 .map { random(keepDice.numberOfFaces) }
                 .map { ResultTree(NDice(keepDice.numberOfFaces), it) }
 
-        return ResultTree(keepDice, values.map { it.value }.sorted().reversed().take(keepDice.numberToKeep).sum(), values)
+        return ResultTree(keepDice, values.map { it.value }.sorted().reversed().take(keepDice.numberToKeep).stream().reduce { x, y -> Math.addExact(x, y) }.get(), values)
     }
 
     override fun visit(keepLowDice: KeepLowDice): ResultTree {
@@ -138,20 +138,20 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
                 .map { random(keepLowDice.numberOfFaces) }
                 .map { ResultTree(NDice(keepLowDice.numberOfFaces), it) }
 
-        return ResultTree(keepLowDice, values.map { it.value }.sorted().take(keepLowDice.numberToKeep).sum(), values)
+        return ResultTree(keepLowDice, values.map { it.value }.sorted().take(keepLowDice.numberToKeep).stream().reduce { x, y -> Math.addExact(x, y) }.get(), values)
     }
 
     override fun visit(explodingDice: ExplodingDice): ResultTree {
         val values = explodeRoll(explodingDice.numberOfDice, explodingDice.numberOfFaces, predicate(explodingDice.comparison, explodingDice.target))
                 .map { ResultTree(NDice(explodingDice.numberOfFaces), it) }
-        return ResultTree(explodingDice, values.map { it.value }.sum(), values)
+        return ResultTree(explodingDice, values.map { it.value }.stream().reduce { x, y -> Math.addExact(x, y) }.get(), values)
     }
 
     override fun visit(compoundingDice: CompoundingDice): ResultTree {
 
         val values = compoundRoll(compoundingDice.numberOfDice, compoundingDice.numberOfFaces, predicate(compoundingDice.comparison, compoundingDice.target), 100)
                 .map { ResultTree(NDice(compoundingDice.numberOfFaces), it) }
-        return ResultTree(compoundingDice, values.map { it.value }.sum(), values)
+        return ResultTree(compoundingDice, values.map { it.value }.stream().reduce { x, y -> Math.addExact(x, y) }.get(), values)
     }
 
     override fun visit(targetPoolDice: TargetPoolDice): ResultTree {
@@ -216,13 +216,13 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         }
     }
 
-    private fun doFudgeRoll(sides: Int = 6, weight: Int = sides / 3): Int {
+    private fun doFudgeRoll(sides: Int = 6, weight: Int = Math.floorDiv(sides, 3)): Int {
         val random = random(sides)
         return when {
-            random > sides - weight -> {
+            random > Math.subtractExact(sides, weight) -> {
                 1
             }
-            random > sides - weight * 2 -> {
+            random > Math.subtractExact(sides, Math.multiplyExact(weight, 2)) -> {
                 -1
             }
             else -> 0
