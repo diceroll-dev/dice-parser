@@ -34,6 +34,7 @@ interface DiceVisitor<T> {
             is SortedDiceExpression -> visit(diceExpression)
             is MinDiceExpression -> visit(diceExpression)
             is MaxDiceExpression -> visit(diceExpression)
+            is CustomDice -> visit(diceExpression)
             else -> throw NotImplementedError("Could not visit unknown type: ${diceExpression::class}")
         }
     }
@@ -65,4 +66,5 @@ interface DiceVisitor<T> {
     fun visit(minDiceExpression: MinDiceExpression): T
 
     fun visit(maxDiceExpression: MaxDiceExpression): T
+    fun visit(customDice: CustomDice): T
 }

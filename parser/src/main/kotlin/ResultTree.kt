@@ -15,4 +15,8 @@
  */
 package dev.diceroll.parser
 
-data class ResultTree(val expression: DiceExpression, val value: Int, val results: List<ResultTree> = listOf())
+data class ResultTree(val expression: DiceExpression, val value: Int, val results: List<ResultTree> = listOf()){
+    override fun toString(): String {
+        return "ResultTree(expression=${expression.description()}, value=$value, results=$results)"
+    }
+}

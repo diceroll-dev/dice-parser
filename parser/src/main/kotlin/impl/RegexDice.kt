@@ -16,6 +16,7 @@
 package dev.diceroll.parser.impl
 
 import dev.diceroll.parser.*
+import java.util.stream.Collectors
 
 class RegexDice {
 
@@ -34,6 +35,7 @@ class RegexDice {
         private val GREATER_THEN_EQUAL = "\\>"
         private val EQUAL = "="
         private val BANG = "!"
+        private val SLASH = "/"
 
         private val DICE_FACE = "$D(?<FACES>$INT)" // d6
         private val N_DICE_FACE = "(?<numberOfDice>$INT)$DICE_FACE" // 2d6
@@ -44,13 +46,17 @@ class RegexDice {
         private val DOT_FUDGE_DICE = "$FUDGE_DICE$DOT(?<weight>$INT)" // dF.1
         private val N_DOT_FUDGE_DICE = "$N_FUDGE_DICE$DOT(?<weight>$INT)" // 2dF.1
         private val COMPOUND_DICE = "$N_DICE_FACE$BANG$BANG" // 3d6!!
-        private val COMPOUND_DICE_TARGET = "$COMPOUND_DICE(?<comp>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL]?)(?<target>$INT)" // 3d6!!>5 or 3d6!!5
+        private val COMPOUND_DICE_TARGET =
+            "$COMPOUND_DICE(?<comp>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL]?)(?<target>$INT)" // 3d6!!>5 or 3d6!!5
         private val EXPLODE_DICE = "$N_DICE_FACE$BANG" // 3d6!
-        private val EXPLODE_DICE_TARGET = "$EXPLODE_DICE(?<comp>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL]?)(?<target>$INT)" // 3d6!>5 or 3d6!5
+        private val EXPLODE_DICE_TARGET =
+            "$EXPLODE_DICE(?<comp>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL]?)(?<target>$INT)" // 3d6!>5 or 3d6!5
         private val KEEP_DICE = Regex("$N_DICE_FACE$K(?<keep>$INT)") // 4d6k2
         private val KEEP_LOW_DICE = Regex("$N_DICE_FACE$L(?<keep>$INT)") // 4d6k2
-        private val TARGET_POOL = "$N_DICE_FACE(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // 4d10>6
-        private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
+        private val TARGET_POOL =
+            "$N_DICE_FACE(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // 4d10>6
+        private val TARGET_POOL_PARENS =
+            "$LPAREN$N_DICE_FACE(?<operation>[+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
         private val NESTED = "(?<LEFT>.*)$LPAREN(?<NESTED>.*)$RPAREN(?<RIGHT>.*)".toRegex() // 10(2) or (2) or 10(2)4
         private val MUL = "(?<left>.+)\\*(?<right>.+)".toRegex() // exp * exp
         private val DIV = "(?<left>.+)/(?<right>.+)".toRegex() // exp / exp
@@ -60,46 +66,50 @@ class RegexDice {
         private val SORT = "(.+)(asc|desc)".toRegex() // sorting
         private val MIN = "(?<left>.+)min(?<right>.+)".toRegex() // 10min1d6
         private val MAX = "(?<left>.+)max(?<right>.+)".toRegex() // 10max1d6
+        private val CUSTOM_DIE = "d\\[(?<diceSides>$INT($SLASH$INT)+)]".toRegex() // d[1/2/3/4]
+        private val N_CUSTOM_DIE = "(?<numberOfDice>$INT)$CUSTOM_DIE" // 3d[1/2/3/4]
     }
 
     val parsers = linkedMapOf(
-            SORT to this::visitSort,
-            N_DICE_FACE.toRegex() to this::visitNDiceFace,
-            KEEP_DICE to this::visitKeepDice,
-            KEEP_LOW_DICE to this::visitKeepLowDice,
-            DICE_FACE.toRegex() to this::visitDiceFace,
-            DICE_FACE_X.toRegex() to this::visitDiceFaceX,
-            N_DICE_FACE_X.toRegex() to this::visitNDiceFaceX,
-            FUDGE_DICE.toRegex() to this::visitFudgeDice,
-            N_FUDGE_DICE.toRegex() to this::visitNFudgeDice,
-            DOT_FUDGE_DICE.toRegex() to this::visitFudgeDiceDot,
-            N_DOT_FUDGE_DICE.toRegex() to this::visitNFudgeDiceDot,
-            COMPOUND_DICE.toRegex() to this::visitCompoundDice,
-            COMPOUND_DICE_TARGET.toRegex() to this::visitCompoundDiceTarget,
-            EXPLODE_DICE.toRegex() to this::visitExplode,
-            EXPLODE_DICE_TARGET.toRegex() to this::visitExplodeTarget,
-            TARGET_POOL.toRegex() to this::visitTargetPool,
-            TARGET_POOL_PARENS.toRegex() to this::visitTargetPoolMod,
-            MIN to this::visitMin,
-            MAX to this::visitMax,
-            NESTED to this::visitNested,
-            ADD to this::visitAdd,
-            SUB to this::visitSubtract,
-            MUL to this::visitMultiply,
-            DIV to this::visitDivide,
-            NEGATIVE to this::visitNegative,
-            INT.toRegex() to this::visitInt
+        SORT to this::visitSort,
+        N_DICE_FACE.toRegex() to this::visitNDiceFace,
+        N_CUSTOM_DIE.toRegex() to this::visitNCustomDice,
+        KEEP_DICE to this::visitKeepDice,
+        KEEP_LOW_DICE to this::visitKeepLowDice,
+        DICE_FACE.toRegex() to this::visitDiceFace,
+        CUSTOM_DIE to this::visitCustomDice,
+        DICE_FACE_X.toRegex() to this::visitDiceFaceX,
+        N_DICE_FACE_X.toRegex() to this::visitNDiceFaceX,
+        FUDGE_DICE.toRegex() to this::visitFudgeDice,
+        N_FUDGE_DICE.toRegex() to this::visitNFudgeDice,
+        DOT_FUDGE_DICE.toRegex() to this::visitFudgeDiceDot,
+        N_DOT_FUDGE_DICE.toRegex() to this::visitNFudgeDiceDot,
+        COMPOUND_DICE.toRegex() to this::visitCompoundDice,
+        COMPOUND_DICE_TARGET.toRegex() to this::visitCompoundDiceTarget,
+        EXPLODE_DICE.toRegex() to this::visitExplode,
+        EXPLODE_DICE_TARGET.toRegex() to this::visitExplodeTarget,
+        TARGET_POOL.toRegex() to this::visitTargetPool,
+        TARGET_POOL_PARENS.toRegex() to this::visitTargetPoolMod,
+        MIN to this::visitMin,
+        MAX to this::visitMax,
+        NESTED to this::visitNested,
+        ADD to this::visitAdd,
+        SUB to this::visitSubtract,
+        MUL to this::visitMultiply,
+        DIV to this::visitDivide,
+        NEGATIVE to this::visitNegative,
+        INT.toRegex() to this::visitInt
     )
 
     fun parse(expression: String): DiceExpression {
 
         val trimmedExpression = expression.trim()
         val result = parsers.filter { it.key.matches(trimmedExpression) }
-                .mapKeys { it.key.matchEntire(trimmedExpression) }
-                .filterKeys { it != null }
-                .map { Pair(it.key!!, it.value) }
-                .firstOrNull()
-                ?: throw ParseException("Failed to parse expression '$expression'")
+            .mapKeys { it.key.matchEntire(trimmedExpression) }
+            .filterKeys { it != null }
+            .map { Pair(it.key!!, it.value) }
+            .firstOrNull()
+            ?: throw ParseException("Failed to parse expression '$expression'")
 
         return result.second.invoke(result.first)
     }
@@ -108,8 +118,8 @@ class RegexDice {
     fun validExpression(expression: String): Boolean {
         val trimmedExpression = expression.trim()
         return parsers.filter { it.key.matches(trimmedExpression) }
-                .filterKeys { true }
-                .isNotEmpty()
+            .filterKeys { true }
+            .isNotEmpty()
     }
 
     private fun visitInt(match: MatchResult): DiceExpression {
@@ -142,6 +152,27 @@ class RegexDice {
 
     private fun visitDiceFace(numberOfFaces: String): DiceExpression {
         return visitDiceFace(numberOfFaces.toInt())
+    }
+
+    private fun visitCustomDice(match: MatchResult): DiceExpression {
+        val faces = match.groupValues[1].split(SLASH).stream()
+            .map { s -> s.trim() }
+            .filter { s -> s != null }
+            .filter { s -> s.toIntOrNull() != null }
+            .map { s -> s.toInt() }
+            .collect(Collectors.toList())
+        return CustomDice(1, faces)
+    }
+
+    private fun visitNCustomDice(match: MatchResult): DiceExpression {
+        val faces = match.groupValues[2].split(SLASH).stream()
+            .map { s -> s.trim() }
+            .filter { s -> s.toIntOrNull() != null }
+            .map { s -> s.toInt() }
+            .collect(Collectors.toList())
+        val numberOfDice = match.groupValues[1].ifEmpty { "1" }.toInt()
+
+        return CustomDice(numberOfDice, faces)
     }
 
     private fun visitDiceFace(numberOfFaces: Int): DiceExpression {

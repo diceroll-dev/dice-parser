@@ -45,6 +45,8 @@ val result: Int = resultTree.value()
 |                               |                                                     |                 |                                                                                                                             |
 | Single Die                    | `d<numberOfFaces>`                                  | `d6`            | roll one, six-sided die                                                                                                     |
 | Multiple Dice                 | `<numberOfDice>d<numberOfFaces>`                    | `3d20`          | roll three, twenty-sided dice                                                                                               |
+| Custom Dice                   | `d[</face1/face2/face3...>]`                        | `d[2/4/8/16]`   | roll a die with four sides that show a 2, 4, 8 and a 16                                                                    |
+| Multiple Custom Dice          | `<numberOfDice>d[</face1/face2/face3...>]`          | `3d[2/4/8/16]`  | roll three dice, with four sides that show a 2, 4, 8 and a 16                                                              |
 | Keep Dice                     | `<numberOfDice>d<numberOfFaces>k<numberOfDiceKept>` | `3d6k2`         | keeps the the highest values out of three, six-sided dice                                                                   |
 | Keep Low Dice                 | `<numberOfDice>d<numberOfFaces>l<numberOfDiceKept>` | `3d6l2`         | keeps the the lowest values out of three, six-sided dice                                                                    |
 | Multiply Dice                 | `<numberOfDice>d<numberOfFaces>X`                   | `4d10X`         | multiplies the result of `4d10 * 4d10`                                                                                      |
@@ -65,7 +67,7 @@ val result: Int = resultTree.value()
 | Multiply                      | `<left> * <right>`                                  | `1d4 * 2d6`     |                                                                                                                             |
 | Divide                        | `<left> / <right>`                                  | `4 / 2`         |                                                                                                                             |
 | Negative                      | `-<diceExpression>`                                 | `-1d6`          | multiplies the result of the dice expression with -1                                                                        |
-| Order                          | `<diceExpression>[asc, desc]`                      | `10d10asc`      | ordering the results of the dice ascending (`asc`) or descending (`desc`)                                                   |
+| Order                         | `<diceExpression>[asc, desc]`                       | `10d10asc`      | ordering the results of the dice ascending (`asc`) or descending (`desc`)                                                   |
 | Min/Max                       | `<diceExpression>[min, max]<diceExpression>`        | `2d6min(1d6+3)` | returns the minimum or maximum of two dice expressions, e.g. `2d6min(1d6+3)` returns the smaller value of `2d6` and `1d6+3` |
 
 ## Dependency Information
