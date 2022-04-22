@@ -220,6 +220,14 @@ class RegexDiceTest {
         expect(108) { parse("(100 + 2d6) max (2 *2)", rolls(2, 6)) }
     }
 
+
+    @Test
+    fun customDie() {
+        expect(2) { parse("d[1/1/1/2/2/3]", rolls(4)) }
+        expect(3) { parse("2d[1/1/1/2/2/3]", rolls(4,2)) }
+        expect(9) { parse("2d[1/1/1/2/2/3] + 1d6", rolls(4,2,6)) }
+    }
+
     private fun parse(expression: String): Int {
         val diceExpression = RegexDice().parse(expression)
         val result = DiceRollingVisitor { it }.visit(diceExpression)
