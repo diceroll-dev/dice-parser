@@ -27,7 +27,6 @@ interface DiceVisitor<T> {
             is FudgeDice -> visit(diceExpression)
             is ExplodingDice -> visit(diceExpression)
             is CompoundingDice -> visit(diceExpression)
-            is TargetPoolDice -> visit(diceExpression)
             is KeepDice -> visit(diceExpression)
             is KeepLowDice -> visit(diceExpression)
             is NegativeDiceExpression -> visit(diceExpression)
@@ -35,6 +34,7 @@ interface DiceVisitor<T> {
             is MinDiceExpression -> visit(diceExpression)
             is MaxDiceExpression -> visit(diceExpression)
             is CustomDice -> visit(diceExpression)
+            is TargetPoolExpression -> visit(diceExpression)
             else -> throw NotImplementedError("Could not visit unknown type: ${diceExpression::class}")
         }
     }
@@ -55,8 +55,6 @@ interface DiceVisitor<T> {
 
     fun visit(compoundingDice: CompoundingDice): T
 
-    fun visit(targetPoolDice: TargetPoolDice): T
-
     fun visit(keepLowDice: KeepLowDice): T
 
     fun visit(negativeDiceExpression: NegativeDiceExpression): T
@@ -67,4 +65,5 @@ interface DiceVisitor<T> {
 
     fun visit(maxDiceExpression: MaxDiceExpression): T
     fun visit(customDice: CustomDice): T
+    fun visit(targetPoolExpression: TargetPoolExpression): T
 }

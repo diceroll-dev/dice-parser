@@ -137,11 +137,15 @@ class RegexDiceTest {
     @Test
     fun targetPool() {
         expect(4) { parse("4d8=8") }
+        expect(4) { parse("4d8>8") }
+        expect(4) { parse("4d8<8") }
         expect(0) { parse("4d8=7") }
         expect(4) { parse("4d8>6") }
         expect(0) { parse("4d8<6") }
-        expect(4) { parse("(4d8-2)<6") }
-        expect(4) { parse("(4d8-2)>6") }
+        expect(1) { parse("(4d8-2)<6") } //each part of the subexpression is evaluated against the target (32 and 2)
+        expect(1) { parse("(4d8-2)>6") } //each part of the subexpression is evaluated against the target (32 and 2)
+        expect(3) { parse("(4d6!)>5", rolls(2, 6, 6, 5, 3, 1)) }
+        expect(3) { parse("(4d6!>5)>5", rolls(2, 6, 6, 5, 3, 1, 2)) }
     }
 
     @Test
@@ -220,12 +224,19 @@ class RegexDiceTest {
         expect(108) { parse("(100 + 2d6) max (2 *2)", rolls(2, 6)) }
     }
 
-
     @Test
     fun customDie() {
         expect(2) { parse("d[1/1/1/2/2/3]", rolls(4)) }
-        expect(3) { parse("2d[1/1/1/2/2/3]", rolls(4,2)) }
-        expect(9) { parse("2d[1/1/1/2/2/3] + 1d6", rolls(4,2,6)) }
+        expect(3) { parse("2d[1/1/1/2/2/3]", rolls(4, 2)) }
+        expect(9) { parse("2d[1/1/1/2/2/3] + 1d6", rolls(4, 2, 6)) }
+    }
+
+    @Test
+    fun addExplode() {
+        expect(5) { parse("d6^", rolls(5)) }
+        expect(10) { parse("d6^", rolls(6, 4)) }
+        expect(13) { parse("2d6^", rolls(3, 6, 4)) }
+        expect(1) { parse("2d6^>10", rolls(3, 6, 4)) }
     }
 
     private fun parse(expression: String): Int {
@@ -248,8 +259,8 @@ class RegexDiceTest {
     private fun getBaseResults(resultTree: ResultTree): List<Int> {
         return if (resultTree.results.isNotEmpty()) {
             resultTree.results.stream()
-                    .flatMap { rt: ResultTree -> getBaseResults(rt).stream() }
-                    .collect(Collectors.toList())
+                .flatMap { rt: ResultTree -> getBaseResults(rt).stream() }
+                .collect(Collectors.toList())
         } else listOf(resultTree.value)
     }
 

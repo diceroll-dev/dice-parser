@@ -105,25 +105,6 @@ class CompoundingDice(
     }
 }
 
-class TargetPoolDice(
-    numberOfFaces: Int,
-    numberOfDice: Int,
-    val comparison: Comparison,
-    val target: Int,
-    val modifier: Int = 0
-) : BaseDiceExpression(numberOfFaces, numberOfDice) {
-    override fun description(): String {
-        return if (modifier == 0) {
-            "${numberOfDice}d${numberOfFaces}${comparison.description}${target}"
-        } else {
-            val extra = if (modifier > 0) {
-                "+"
-            } else ""
-            "(${numberOfDice}d${numberOfFaces}${extra}${modifier})${comparison.description}${target}"
-        }
-    }
-}
-
 open class MathExpression(val left: DiceExpression, val operation: Operation, val right: DiceExpression) :
     DiceExpression {
     override fun description(): String {
@@ -152,6 +133,12 @@ class SortedDiceExpression(val value: DiceExpression, val sortAscending: Boolean
     override fun description(): String {
         val order = if (sortAscending) "asc" else "desc"
         return value.description() + " " + order
+    }
+}
+
+class TargetPoolExpression(val left: DiceExpression, val comparison: Comparison, val target: Int) : DiceExpression {
+    override fun description(): String {
+        return left.description() + comparison + target
     }
 }
 

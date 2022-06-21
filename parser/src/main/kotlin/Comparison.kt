@@ -16,7 +16,7 @@
 package dev.diceroll.parser
 
 enum class Comparison(val description: String) {
-    GREATER_THAN(">"),
-    LESS_THAN("<"),
+    GREATER_EQUAL_THAN(">"),
+    LESS_EQUAL_THAN("<"),
     EQUAL_TO("=");
 }
