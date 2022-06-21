@@ -90,6 +90,22 @@ class ExplodingDice(
     }
 }
 
+class ExplodingAddDice(
+    numberOfFaces: Int,
+    numberOfDice: Int,
+    val comparison: Comparison = Comparison.EQUAL_TO,
+    val target: Int = numberOfFaces
+) : BaseDiceExpression(numberOfFaces, numberOfDice) {
+    override fun description(): String {
+        val extra = if (numberOfFaces == target && comparison == Comparison.EQUAL_TO) {
+            ""
+        } else {
+            "${comparison.description}${target}"
+        }
+        return "${numberOfDice}d${numberOfFaces}^${extra}"
+    }
+}
+
 class CompoundingDice(
     numberOfFaces: Int, numberOfDice: Int,
     val comparison: Comparison = Comparison.EQUAL_TO,

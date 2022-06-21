@@ -152,7 +152,10 @@ class RegexDiceTest {
     fun explode() {
         expect(23) { parse("4d6!", rolls(2, 6, 6, 5, 3, 1)) }
         expect(25) { parse("4d6!>5", rolls(2, 6, 6, 5, 3, 1, 2)) }
+        expect(3) { parse("(4d6!)>5", rolls(2, 6, 6, 5, 3, 1, 2)) }
         expect(19) { parse("4d6!<1", rolls(2, 6, 6, 1, 4)) }
+        expect(0) { parse("(2d6!)>10", rolls(3, 6, 4)) }
+
     }
 
     @Test
@@ -233,8 +236,8 @@ class RegexDiceTest {
 
     @Test
     fun addExplode() {
-        expect(5) { parse("d6^", rolls(5)) }
-        expect(10) { parse("d6^", rolls(6, 4)) }
+        expect(5) { parse("1d6^", rolls(5)) }
+        expect(10) { parse("1d6^", rolls(6, 4)) }
         expect(13) { parse("2d6^", rolls(3, 6, 4)) }
         expect(1) { parse("2d6^>10", rolls(3, 6, 4)) }
     }

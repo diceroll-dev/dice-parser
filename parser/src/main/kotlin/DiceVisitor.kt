@@ -26,6 +26,7 @@ interface DiceVisitor<T> {
             is DiceX -> visit(diceExpression)
             is FudgeDice -> visit(diceExpression)
             is ExplodingDice -> visit(diceExpression)
+            is ExplodingAddDice -> visit(diceExpression)
             is CompoundingDice -> visit(diceExpression)
             is KeepDice -> visit(diceExpression)
             is KeepLowDice -> visit(diceExpression)
@@ -52,6 +53,8 @@ interface DiceVisitor<T> {
     fun visit(keepDice: KeepDice): T
 
     fun visit(explodingDice: ExplodingDice): T
+
+    fun visit(explodingAddDice: ExplodingAddDice): T
 
     fun visit(compoundingDice: CompoundingDice): T
 

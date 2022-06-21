@@ -36,6 +36,7 @@ class RegexDice {
         private val EQUAL = "="
         private val BANG = "!"
         private val SLASH = "/"
+        private val CARET = "\\^"
 
         private val DICE_FACE = "$D(?<FACES>$INT)" // d6
         private val N_DICE_FACE = "(?<numberOfDice>$INT)$DICE_FACE" // 2d6
@@ -49,6 +50,7 @@ class RegexDice {
         private val COMPOUND_DICE_TARGET =
             "$COMPOUND_DICE(?<comp>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL]?)(?<target>$INT)" // 3d6!!>5 or 3d6!!5
         private val EXPLODE_DICE = "$N_DICE_FACE$BANG" // 3d6!
+        private val EXPLODE_ADD_DICE = "$N_DICE_FACE$CARET" // 3d6^
         private val EXPLODE_DICE_TARGET =
             "$EXPLODE_DICE(?<comp>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL]?)(?<target>$INT)" // 3d6!>5 or 3d6!5
         private val KEEP_DICE = Regex("$N_DICE_FACE$K(?<keep>$INT)") // 4d6k2
@@ -86,6 +88,7 @@ class RegexDice {
         COMPOUND_DICE_TARGET.toRegex() to this::visitCompoundDiceTarget,
         EXPLODE_DICE.toRegex() to this::visitExplode,
         EXPLODE_DICE_TARGET.toRegex() to this::visitExplodeTarget,
+        EXPLODE_ADD_DICE.toRegex() to this::visitExplodeAdd,
         TARGET_POOL.toRegex() to this::visitTargetFilter,
         MIN to this::visitMin,
         MAX to this::visitMax,
@@ -297,6 +300,13 @@ class RegexDice {
         val numberOfFaces = match.groupValues[2].toInt()
 
         return ExplodingDice(numberOfFaces, numberOfDice)
+    }
+
+    private fun visitExplodeAdd(match: MatchResult): DiceExpression { // 3d6^
+        val numberOfDice = match.groupValues[1].toInt()
+        val numberOfFaces = match.groupValues[2].toInt()
+
+        return ExplodingAddDice(numberOfFaces, numberOfDice)
     }
 
     private fun visitExplodeTarget(match: MatchResult): DiceExpression { // 3d6!>5 or 3d6!5
