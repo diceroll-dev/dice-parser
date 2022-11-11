@@ -16,6 +16,8 @@
 package dev.diceroll.parser.impl
 
 import dev.diceroll.parser.DiceRollingVisitor
+import dev.diceroll.parser.ResultTree
+import java.util.stream.Collectors
 import kotlin.test.Test
 import kotlin.test.expect
 
@@ -112,7 +114,7 @@ class RegexDiceTest {
     @Test
     fun dotFudge() {
         expect(1) { parse("dF.1", rolls(3)) }
-        expect(2) { parse("4dF.1", rolls(2,4,6,6)) } // 0,0,1,1
+        expect(2) { parse("4dF.1", rolls(2, 4, 6, 6)) } // 0,0,1,1
         expect(3) { parse("3dF.3") }
     }
 
@@ -141,9 +143,9 @@ class RegexDiceTest {
     }
 
     @Test
-    fun valid(){
-        expect(true, "4d6!! should be valid"){RegexDice().validExpression("4d6!!")}
-        expect(false, "4w6!! should be invalid"){RegexDice().validExpression("4w6!!")}
+    fun valid() {
+        expect(true, "4d6!! should be valid") { RegexDice().validExpression("4d6!!") }
+        expect(false, "4w6!! should be invalid") { RegexDice().validExpression("4w6!!") }
     }
 
     @Test
@@ -151,6 +153,53 @@ class RegexDiceTest {
         expect(2) { parse("4d6l1", rolls(2, 6, 6, 5)) }
         expect(7) { parse("4d6l2", rolls(2, 6, 6, 5)) }
         expect(2) { parse("2d20l1", rolls(2, 19)) }
+    }
+
+    @Test
+    fun negative() {
+        expect(-2) { parse("-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(-2) { parse("-d6", rolls(2)) }
+        expect(-2) { parse("-2", rolls()) }
+        expect(-5) { parse("-2d6", rolls(2, 3)) }
+        expect(-7) { parse("-2d6-2", rolls(2, 3)) }
+        expect(-3) { parse("-2d6+2", rolls(2, 3)) }
+        expect(-10) { parse("-2d6*2", rolls(2, 3)) }
+        expect(listOf(-2, -3, 2)) { getResults("-2d6+2", rolls(2, 3)) }
+    }
+
+    @Test
+    fun sort() {
+        expect(listOf(-3, -2, 2)) { getResults("-2d6+2asc", rolls(2, 3)) }
+        expect(-3) { parse("-2d6+2asc", rolls(2, 3)) }
+        expect(listOf(2, -2, -3)) { getResults("-2d6+2desc", rolls(2, 3)) }
+        expect(-3) { parse("-2d6+2desc", rolls(2, 3)) }
+        expect(listOf(-3, -2, 4)) { getResults("-2d6-4asc", rolls(2, 3)) }
+        expect(listOf(-2)) { getResults("-2asc", rolls()) }
+        expect(listOf(-2, 2)) { getResults("-2 + 2 asc", rolls()) }
+    }
+
+    @Test
+    fun min() {
+        expect(-3) { parse("-3min-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(-2) { parse("3min-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(2) { parse("2 min 100", rolls()) }
+        expect(2) { parse("2 min 2", rolls()) }
+        expect(2) { parse("2 min 100 + 2d6", rolls(2, 6)) }
+        expect(2) { parse("2 min (100 + 2d6)", rolls(2, 6)) }
+        expect(2) { parse("(100 + 2d6) min 2 ", rolls(2, 6)) }
+        expect(4) { parse("(100 + 2d6) min (2 *2)", rolls(2, 6)) }
+    }
+
+    @Test
+    fun max() {
+        expect(-2) { parse("-3max-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(3) { parse("3max-4d6l1", rolls(2, 6, 6, 5)) }
+        expect(100) { parse("2 max 100", rolls(2, 6)) }
+        expect(2) { parse("2 max 2", rolls(2, 6)) }
+        expect(108) { parse("2 max 100 + 2d6", rolls(2, 6)) }
+        expect(108) { parse("2 max (100 + 2d6)", rolls(2, 6)) }
+        expect(108) { parse("(100 + 2d6) max 2", rolls(2, 6)) }
+        expect(108) { parse("(100 + 2d6) max (2 *2)", rolls(2, 6)) }
     }
 
     private fun parse(expression: String): Int {
@@ -163,6 +212,19 @@ class RegexDiceTest {
         val diceExpression = RegexDice().parse(expression)
         val result = DiceRollingVisitor { staticRolls.removeAt(0) }.visit(diceExpression)
         return result.value
+    }
+
+    private fun getResults(expression: String, staticRolls: MutableList<Int>): List<Int> {
+        val diceExpression = RegexDice().parse(expression)
+        return getBaseResults(DiceRollingVisitor { staticRolls.removeAt(0) }.visit(diceExpression))
+    }
+
+    private fun getBaseResults(resultTree: ResultTree): List<Int> {
+        return if (resultTree.results.isNotEmpty()) {
+            resultTree.results.stream()
+                    .flatMap { rt: ResultTree -> getBaseResults(rt).stream() }
+                    .collect(Collectors.toList())
+        } else listOf(resultTree.value)
     }
 
     private fun rolls(vararg values: Int): MutableList<Int> {
