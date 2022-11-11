@@ -28,6 +28,7 @@ interface DiceVisitor<T> {
             is CompoundingDice -> visit(diceExpression)
             is TargetPoolDice -> visit(diceExpression)
             is KeepDice -> visit(diceExpression)
+            is KeepLowDice -> visit(diceExpression)
             else -> throw NotImplementedError("Could not visit unknown type: ${diceExpression::class}")
         }
     }
@@ -49,4 +50,6 @@ interface DiceVisitor<T> {
     fun visit(compoundingDice: CompoundingDice): T
 
     fun visit(targetPoolDice: TargetPoolDice): T
+
+    fun visit(keepLowDice: KeepLowDice): T
 }
