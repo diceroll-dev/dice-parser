@@ -158,6 +158,10 @@
                                                 <label>deps</label>
                                                 <title>regex:Bump </title>
                                             </labeler>
+                                            <labeler>
+                                                <label>release</label>
+                                                <title>[maven-release-plugin]</title>
+                                            </labeler>
                                         </labelers>
                                         <categories>
                                             <category>
@@ -180,10 +184,20 @@
                                                     <label>deps</label>
                                                 </labels>
                                             </category>
+                                            <category>
+                                                <title>Noise</title>
+                                                <key>noise</key>
+                                                <labels>
+                                                    <label>release</label>
+                                                </labels>
+                                            </category>
                                         </categories>
                                         <hide>
                                             <!-- uncategorized changes have been "moved" to General Updates -->
                                             <uncategorized>true</uncategorized>
+                                            <categories>
+                                                <category>noise</category>
+                                            </categories>
                                             <contributors>
                                                 <contributor>[bot]</contributor>
                                                 <contributor>GitHub</contributor>
