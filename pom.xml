@@ -51,7 +51,9 @@
     </scm>
 
     <properties>
-        <github.slug>diceroll-dev/dice-parser</github.slug>
+        <github.org>diceroll-dev</github.org>
+        <github.project>dice-parser</github.project>
+        <github.slug>${github.org}/${github.project}</github.slug>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -130,6 +132,67 @@
                             <exclude>**/mvnw</exclude>
                             <exclude>.gitattributes</exclude>
                         </excludes>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.jreleaser</groupId>
+                    <artifactId>jreleaser-maven-plugin</artifactId>
+                    <version>1.5.1</version>
+                    <inherited>false</inherited>
+                    <configuration>
+                        <jreleaser>
+                            <project>
+                                <copyright>2020-Present Dice Parser</copyright>
+                            </project>
+                            <release>
+                                <github>
+                                    <owner>${github.org}</owner>
+                                    <name>${github.project}</name>
+                                    <tagName>dice-parser-{{projectVersion}}</tagName>
+                                    <uploadAssets>NEVER</uploadAssets>
+                                    <changelog>
+                                        <formatted>ALWAYS</formatted>
+                                        <labelers>
+                                            <labeler>
+                                                <!-- mark all dependency updates -->
+                                                <label>deps</label>
+                                                <title>regex:Bump </title>
+                                            </labeler>
+                                        </labelers>
+                                        <categories>
+                                            <category>
+                                                <!-- Change name and order of uncategorized items -->
+                                                <title>General Updates</title>
+                                                <key>&lt;&lt;UNCATEGORIZED&gt;&gt;</key>
+                                                <order>1</order>
+                                                <labels>
+                                                    <label>uncategorized</label>
+                                                </labels>
+                                            </category>
+                                            <category>
+                                                <!-- Move dependency updates to bottom of change log -->
+                                                <title>Dependency Updates</title>
+                                                <key>deps</key>
+                                                <order>999</order>
+                                                <!-- bot commits, don't include author -->
+                                                <format>- {{commitShortHash}} {{commitTitle}}</format>
+                                                <labels>
+                                                    <label>deps</label>
+                                                </labels>
+                                            </category>
+                                        </categories>
+                                        <hide>
+                                            <!-- uncategorized changes have been "moved" to General Updates -->
+                                            <uncategorized>true</uncategorized>
+                                            <contributors>
+                                                <contributor>[bot]</contributor>
+                                                <contributor>GitHub</contributor>
+                                            </contributors>
+                                        </hide>
+                                    </changelog>
+                                </github>
+                            </release>
+                        </jreleaser>
                     </configuration>
                 </plugin>
             </plugins>
