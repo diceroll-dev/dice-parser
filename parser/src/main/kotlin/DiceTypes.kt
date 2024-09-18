@@ -58,6 +58,12 @@ class KeepLowDice(numberOfFaces: Int, numberOfDice: Int, val numberToKeep: Int) 
     }
 }
 
+class KeepLowDiceMul(numberOfFaces: Int, numberOfDice: Int, val numberToKeep: Int) : BaseDiceExpression(numberOfFaces, numberOfDice) {
+    override fun description(): String {
+        return "${numberOfDice}d${numberOfFaces}l${numberToKeep}X"
+    }
+}
+
 class ExplodingDice(numberOfFaces: Int, numberOfDice: Int, val comparison: Comparison = Comparison.EQUAL_TO, val target: Int = numberOfFaces) : BaseDiceExpression(numberOfFaces, numberOfDice) {
     override fun description(): String {
         val extra = if (numberOfFaces == target && comparison == Comparison.EQUAL_TO) {
