@@ -30,7 +30,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        java: [ '8', '11',  '17' ]
+        java: [ '8', '11',  '17', '21' ]
     env:
       MVN_CMD: ./mvnw --no-transfer-progress -B
     steps:
