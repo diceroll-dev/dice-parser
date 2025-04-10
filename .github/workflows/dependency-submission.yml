@@ -17,4 +17,4 @@ jobs:
           java-version: '17'
           distribution: adopt
       - name: Maven Dependency Tree Dependency Submission
-        uses: advanced-security/maven-dependency-submission-action@v4.1.1
+        uses: advanced-security/maven-dependency-submission-action@v4.1.2
