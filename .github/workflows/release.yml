@@ -1,0 +1,93 @@
+#
+# Copyright 2021-Present Dice Parser
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+name: Release
+
+on:
+  push:
+    tags:
+      - dice-parser-*.**
+
+permissions:
+  actions: read
+  id-token: write
+  contents: write
+
+env:
+  JAVA_VERSION: 21
+  MAVEN_ARGS: --batch-mode --no-transfer-progress
+
+jobs:
+  build:
+    name: Build Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.vars.outputs.VERSION }}
+      tag: ${{ steps.vars.outputs.TAG }}
+      tag-sha: ${{ steps.vars.outputs.TAG_SHA }}
+      hashes: ${{ steps.slsa.outputs.HASHES }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Version
+        id: vars
+        run: |
+          # get the current version (possibly auto versioned)
+          VERSION=$(./mvnw --non-recursive --quiet --batch-mode \
+                        -DforceStdout=true \
+                        -Dexpression=project.version \
+                        help:evaluate \
+                        | tail -n 1)
+                    
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+          echo "TAG=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          echo "TAG_SHA=${GITHUB_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Set up JDK
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          java-version: 21
+          distribution: adopt
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+
+      - name: Maven Release Build
+        id: mvn
+        run: |
+          # TODO: this will need to deploy once this is working
+          ./mvnw -V verify \
+            -Pdocs -Psonatype-oss-release \
+            --threads=1 \
+            -Daether.checksums.algorithms=SHA-512,SHA-1,MD5
+
+          # echo "changelog-md=./target/jreleaser/release/CHANGELOG.md" >> $GITHUB_OUTPUT
+#        env:
+#          NEXUS_USERNAME: ${{ secrets.NEXUS_USER }}
+#          NEXUS_PASSWORD: ${{ secrets.NEXUS_PW }}
+      - name: SLSA
+        shell: bash
+        id: slsa
+        run: |
+          echo "HASHES=$(cat ${{ steps.vars.outputs.artifact_sha256 }} | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+  provenance:
+    name: Provenance
+    needs: [build]
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.build.outputs.hashes }}
+      upload-assets: true
+      upload-tag-name: ${{ needs.build.outputs.tag }}
+      provenance-name: diceroll-parser-${{ needs.build.outputs.version }}.intoto.jsonl
