@@ -43,11 +43,12 @@
         </license>
     </licenses>
 
-    <scm>
-        <connection>scm:git:git://github.com/okta/${github.slug}.git</connection>
-        <developerConnection>scm:git:ssh://github.com:${github.slug}.git</developerConnection>
-        <url>http://github.com/${github.slug}</url>
-        <tag>dice-parser-0.1.0</tag>
+    <scm child.scm.connection.inherit.append.path="false"
+         child.scm.developerConnection.inherit.append.path="false"
+         child.scm.url.inherit.append.path="false">
+        <connection>scm:git:https://github.com/${github.slug}.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/${github.slug}.git</developerConnection>
+        <url>https://github.com/${github.slug}</url>
     </scm>
 
     <properties>
