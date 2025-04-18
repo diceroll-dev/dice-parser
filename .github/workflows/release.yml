@@ -84,9 +84,17 @@ jobs:
           echo "HASHES=$(cat ${{ steps.vars.outputs.artifact_sha256 }} | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: GitHub Provenance
+        id: gh_provenance
         uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
         with:
           subject-checksums: ${{ steps.vars.outputs.artifact_sha256 }}
+
+      - name: Upload provenance
+        uses: softprops/action-gh-release@da05d552573ad5aba039eaac05058a918a7bf631 # v2.2.2
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          files: |
+            ${{ steps.gh_provenance.outputs.bundle-path }}
 
   provenance:
     name: Provenance
