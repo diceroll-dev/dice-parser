@@ -48,7 +48,8 @@ class RegexDice {
         private val EXPLODE_DICE = "$N_DICE_FACE$BANG" // 3d6!
         private val EXPLODE_DICE_TARGET = "$EXPLODE_DICE(?<comp>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL]?)(?<target>$INT)" // 3d6!>5 or 3d6!5
         private val KEEP_DICE = Regex("$N_DICE_FACE$K(?<keep>$INT)") // 4d6k2
-        private val KEEP_LOW_DICE = Regex("$N_DICE_FACE$L(?<keep>$INT)") // 4d6k2
+        private val KEEP_LOW_DICE = Regex("$N_DICE_FACE$L(?<keep>$INT)") // 4d6l2
+        private val KEEP_LOW_DICE_MUL = Regex("$N_DICE_FACE$L(?<keep>$INT)X") // 4d6l2X
         private val TARGET_POOL = "$N_DICE_FACE(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // 4d10>6
         private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
         private val NESTED = "(?<LEFT>.*)$LPAREN(?<NESTED>.*)$RPAREN(?<RIGHT>.*)".toRegex() // 10(2) or (2) or 10(2)4
@@ -67,6 +68,7 @@ class RegexDice {
             N_DICE_FACE.toRegex() to this::visitNDiceFace,
             KEEP_DICE to this::visitKeepDice,
             KEEP_LOW_DICE to this::visitKeepLowDice,
+            KEEP_LOW_DICE_MUL to this::visitKeepLowDiceMul,
             DICE_FACE.toRegex() to this::visitDiceFace,
             DICE_FACE_X.toRegex() to this::visitDiceFaceX,
             N_DICE_FACE_X.toRegex() to this::visitNDiceFaceX,
@@ -228,6 +230,14 @@ class RegexDice {
         val numberToKeep = match.groupValues[3].toInt()
 
         return KeepLowDice(numberOfFaces, numberOfDice, numberToKeep)
+    }
+
+    private fun visitKeepLowDiceMul(match: MatchResult): DiceExpression {
+        val numberOfDice = match.groupValues[1].toInt()
+        val numberOfFaces = match.groupValues[2].toInt()
+        val numberToKeep = match.groupValues[3].toInt()
+
+        return KeepLowDiceMul(numberOfFaces, numberOfDice, numberToKeep)
     }
 
     fun comparisonFrom(text: String): Comparison {
