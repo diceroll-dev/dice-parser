@@ -28,12 +28,14 @@
     <version>0.3.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Dice Parser Parent</name>
+    <description>Dice notation parser for Java and Kotlin</description>
 
     <organization>
         <name>diceroll.dev</name>
         <url>https://diceroll.dev</url>
     </organization>
 
+    <url>https://diceroll.dev</url>
     <inceptionYear>2020</inceptionYear>
 
     <licenses>
@@ -111,6 +113,26 @@
                         <goals>deploy</goals>
                         <mavenExecutorId>forked-path</mavenExecutorId>
                         <arguments>-Pdocs,sonatype-oss-release</arguments>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>2.18.0</version>
+                    <configuration>
+                        <generateBackupPoms>false</generateBackupPoms>
+                        <ruleSet>
+                            <ignoreVersions>
+                                <ignoreVersion>
+                                    <type>regex</type>
+                                    <version>(?i).+(-|\.)(alpha|beta).+</version>
+                                </ignoreVersion>
+                                <ignoreVersion>
+                                    <type>regex</type>
+                                    <version>.+-M\\d.+</version>
+                                </ignoreVersion>
+                            </ignoreVersions>
+                        </ruleSet>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -214,6 +236,26 @@
         </pluginManagement>
 
         <plugins>
+            <plugin>
+                <groupId>org.cyclonedx</groupId>
+                <artifactId>cyclonedx-maven-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>makeAggregateBom</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/sbom</outputDirectory>
+                            <outputFormat>json</outputFormat>
+                            <outputName>application.cdx</outputName>
+                            <includeTestScope>true</includeTestScope>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <groupId>org.jetbrains.kotlin</groupId>
@@ -350,6 +392,27 @@
                                     <classifier>javadoc</classifier>
                                     <classesDirectory>${basedir}/src/docs</classesDirectory>
                                 </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>sonatype-oss-release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>3.2.7</version>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>
