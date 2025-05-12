@@ -28,12 +28,14 @@
     <version>0.3.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Dice Parser Parent</name>
+    <description>Dice notation parser for Java and Kotlin</description>
 
     <organization>
         <name>diceroll.dev</name>
         <url>https://diceroll.dev</url>
     </organization>
 
+    <url>https://diceroll.dev</url>
     <inceptionYear>2020</inceptionYear>
 
     <licenses>
