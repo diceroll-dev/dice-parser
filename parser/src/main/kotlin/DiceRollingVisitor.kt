@@ -139,6 +139,14 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         return ResultTree(keepLowDice, values.map { it.value }.sorted().take(keepLowDice.numberToKeep).stream().reduce { x, y -> Math.addExact(x, y) }.get(), values)
     }
 
+    override fun visit(keepLowDiceMul: KeepLowDiceMul): ResultTree {
+        val values = IntRange(1, keepLowDiceMul.numberOfDice)
+                .map { random(keepLowDiceMul.numberOfFaces) }
+                .map { ResultTree(NDice(keepLowDiceMul.numberOfFaces), it) }
+
+        return ResultTree(keepLowDiceMul, values.map { it.value }.sorted().take(keepLowDiceMul.numberToKeep).stream().reduce { x, y -> Math.multiplyExact(x, y) }.get(), values)
+    }
+
     override fun visit(explodingDice: ExplodingDice): ResultTree {
         val values = explodeRoll(explodingDice.numberOfDice, explodingDice.numberOfFaces, predicate(explodingDice.comparison, explodingDice.target))
                 .map { ResultTree(NDice(explodingDice.numberOfFaces), it) }
