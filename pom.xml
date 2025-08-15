@@ -63,7 +63,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.outputTimestamp>2023-03-16T16:34:18Z</project.build.outputTimestamp>
 
-        <kotlin.version>2.1.21</kotlin.version>
+        <kotlin.version>2.2.10</kotlin.version>
     </properties>
 
     <modules>
