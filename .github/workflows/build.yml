@@ -22,17 +22,23 @@ on:
     tags: # all tags
       - '*'
   pull_request: # build all PRs
+  schedule: # weekly, so new CodeQL queries run against unchanged code
+    - cron: '0 6 * * 1'
 
 jobs:
   build:
     name: Java - ${{ matrix.java }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      security-events: write
     strategy:
       matrix:
         os: [ubuntu-latest]
         java: [ '8', '11',  '17', '21', '25' ]
     env:
       MVN_CMD: ./mvnw -V -B
+      CODEQL_JAVA: '17'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -42,6 +48,21 @@ jobs:
           java-version: ${{ matrix.java }}
           distribution: zulu
 
+      # CodeQL runs on one matrix build only; it extracts sources from the compiler invocations in this build.
+      - name: Initialize CodeQL
+        if: matrix.java == env.CODEQL_JAVA
+        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          languages: java-kotlin
+          build-mode: manual
+
+      # Compile Kotlin in-process, so a reused Kotlin daemon cannot bypass the CodeQL tracer.
       - name: Build and Test
-        run: ${{env.MVN_CMD}} verify
+        run: ${{env.MVN_CMD}} verify -Dkotlin.compiler.daemon=false
+
+      - name: Perform CodeQL Analysis
+        if: matrix.java == env.CODEQL_JAVA
+        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4.38.2
+        with:
+          category: /language:java-kotlin
 
