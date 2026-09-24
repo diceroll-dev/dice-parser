@@ -28,7 +28,7 @@ permissions:
 
 env:
   JAVA_VERSION: 21
-  MAVEN_ARGS: --batch-mode --no-transfer-progress
+  MAVEN_ARGS: --batch-mode
 
 jobs:
   build:
@@ -61,7 +61,7 @@ jobs:
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
         with:
           java-version: 21
-          distribution: adopt
+          distribution: zulu
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
 
       - name: Maven Release Build
