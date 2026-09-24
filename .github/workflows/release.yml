@@ -28,7 +28,7 @@ permissions:
 
 env:
   JAVA_VERSION: 21
-  MAVEN_ARGS: --batch-mode --no-transfer-progress
+  MAVEN_ARGS: --batch-mode
 
 jobs:
   build:
