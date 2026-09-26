@@ -25,6 +25,6 @@ public class JavaUsageTest {
      */
     @Test
     public void simpleUsageTest() {
-        Assert.assertTrue(Dice.roll("2d6") >= 2,"Expected a value >2");
+        Assert.assertTrue(Dice.roll("2d6") >= 2,"Expected a value >= 2");
     }
 }
