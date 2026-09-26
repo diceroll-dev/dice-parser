@@ -34,6 +34,7 @@ interface DiceVisitor<T> {
             is SortedDiceExpression -> visit(diceExpression)
             is MinDiceExpression -> visit(diceExpression)
             is MaxDiceExpression -> visit(diceExpression)
+            is GroupExpression -> visit(diceExpression)
             else -> throw NotImplementedError("Could not visit unknown type: ${diceExpression::class}")
         }
     }
@@ -65,4 +66,9 @@ interface DiceVisitor<T> {
     fun visit(minDiceExpression: MinDiceExpression): T
 
     fun visit(maxDiceExpression: MaxDiceExpression): T
+
+    /**
+     * Visits a labelled group, e.g. `(1d6 + 2)[fire]`. Defaults to visiting the inner expression.
+     */
+    fun visit(groupExpression: GroupExpression): T = visit(groupExpression.value)
 }
