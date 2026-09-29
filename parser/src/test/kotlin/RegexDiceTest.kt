@@ -218,6 +218,13 @@ class RegexDiceTest {
         expect(108) { parse("(100 + 2d6) max (2 *2)", rolls(2, 6)) }
     }
 
+    @Test
+    fun multiplyLowest() {
+        expect(6) { parse("4d6l2X", rolls(2,3,4,5)) }
+        expect(4) { parse("4d6l2X", rolls(2,2,4,5)) }
+        expect(8) { parse("4d6l2X", rolls(6,2,4,5)) }
+    }
+
     private fun parse(expression: String): Int {
         val diceExpression = RegexDice().parse(expression)
         val result = DiceRollingVisitor { it }.visit(diceExpression)

@@ -30,6 +30,7 @@ interface DiceVisitor<T> {
             is TargetPoolDice -> visit(diceExpression)
             is KeepDice -> visit(diceExpression)
             is KeepLowDice -> visit(diceExpression)
+            is KeepLowDiceMul -> visit(diceExpression)
             is NegativeDiceExpression -> visit(diceExpression)
             is SortedDiceExpression -> visit(diceExpression)
             is MinDiceExpression -> visit(diceExpression)
@@ -57,6 +58,8 @@ interface DiceVisitor<T> {
     fun visit(targetPoolDice: TargetPoolDice): T
 
     fun visit(keepLowDice: KeepLowDice): T
+
+    fun visit(keepLowDiceMul: KeepLowDiceMul): T
 
     fun visit(negativeDiceExpression: NegativeDiceExpression): T
 
