@@ -15,4 +15,10 @@
  */
 package dev.diceroll.parser
 
+/**
+ * Thrown when a dice expression cannot be parsed.
+ *
+ * The message quotes the caller-supplied input verbatim (including any label text) and is NOT escaped.
+ * Escape it for the target context (HTML, Markdown, logs, ...) before rendering or logging it.
+ */
 class ParseException(message:String): Exception(message)

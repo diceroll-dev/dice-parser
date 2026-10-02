@@ -99,6 +99,11 @@ class DiceRollingVisitor(private val randomGenerator: (Int) -> Int) : DiceVisito
         }
     }
 
+    override fun visit(groupExpression: GroupExpression): ResultTree {
+        val inner = visit(groupExpression.value)
+        return ResultTree(groupExpression, inner.value, listOf(inner))
+    }
+
     override fun visit(nDice: NDice): ResultTree {
         val values = IntRange(1, nDice.numberOfDice)
                 .map { random(nDice.numberOfFaces) }
