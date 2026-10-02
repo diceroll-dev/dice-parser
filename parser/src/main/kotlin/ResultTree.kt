@@ -15,4 +15,15 @@
  */
 package dev.diceroll.parser
 
-data class ResultTree(val expression: DiceExpression, val value: Int, val results: List<ResultTree> = listOf())
+data class ResultTree(val expression: DiceExpression, val value: Int, val results: List<ResultTree> = listOf()) {
+
+    /**
+     * The label of [expression], e.g. `slashing` for `1d8[slashing]`, or `null` when there is none.
+     *
+     * The label is caller-supplied text and is NOT escaped (see [DiceExpression.label] for the allowed characters,
+     * which custom [DiceExpression] implementations need not follow). Escape or validate it for the target context
+     * (HTML, Markdown, logs, ...) before rendering, logging, or using it as an identifier or path.
+     */
+    val label: String?
+        get() = expression.label
+}

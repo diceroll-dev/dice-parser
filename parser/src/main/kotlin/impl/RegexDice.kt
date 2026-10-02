@@ -35,6 +35,10 @@ class RegexDice {
         private val EQUAL = "="
         private val BANG = "!"
 
+        // an operator is not inside a label when no `]` follows it before the next `[`, so label text like
+        // `1d6 + 2` or `min/max` never splits an expression
+        private val NOT_IN_LABEL = "(?![^\\[]*\\])"
+
         private val DICE_FACE = "$D(?<FACES>$INT)" // d6
         private val N_DICE_FACE = "(?<numberOfDice>$INT)$DICE_FACE" // 2d6
         private val DICE_FACE_X = "$DICE_FACE$X" // d6
@@ -51,35 +55,41 @@ class RegexDice {
         private val KEEP_LOW_DICE = Regex("$N_DICE_FACE$L(?<keep>$INT)") // 4d6k2
         private val TARGET_POOL = "$N_DICE_FACE(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // 4d10>6
         private val TARGET_POOL_PARENS = "$LPAREN$N_DICE_FACE(?<operation>[+-]?)(?<modifier>$INT)$RPAREN(?<operator>[$LESS_THEN_EQUAL$GREATER_THEN_EQUAL$EQUAL])(?<target>$INT)" // (4d10+2)>6
-        private val NESTED = "(?<LEFT>.*)$LPAREN(?<NESTED>.*)$RPAREN(?<RIGHT>.*)".toRegex() // 10(2) or (2) or 10(2)4
-        private val MUL = "(?<left>.+)\\*(?<right>.+)".toRegex() // exp * exp
-        private val DIV = "(?<left>.+)/(?<right>.+)".toRegex() // exp / exp
-        private val ADD = "(?<left>.+)\\+(?<right>.+)".toRegex() // exp + exp
-        private val SUB = "(?<left>.+)-(?<right>.+)".toRegex() // exp - exp
+        private val NESTED = "(?<LEFT>.*)$LPAREN$NOT_IN_LABEL(?<NESTED>.*)$RPAREN$NOT_IN_LABEL(?<RIGHT>.*)".toRegex() // 10(2) or (2) or 10(2)4
+        private val MUL = "(?<left>.+)\\*$NOT_IN_LABEL(?<right>.+)".toRegex() // exp * exp
+        private val DIV = "(?<left>.+)/$NOT_IN_LABEL(?<right>.+)".toRegex() // exp / exp
+        private val ADD = "(?<left>.+)\\+$NOT_IN_LABEL(?<right>.+)".toRegex() // exp + exp
+        private val SUB = "(?<left>.+)-$NOT_IN_LABEL(?<right>.+)".toRegex() // exp - exp
         private val NEGATIVE = "-.+".toRegex() // -
         private val SORT = "(.+)(asc|desc)".toRegex() // sorting
-        private val MIN = "(?<left>.+)min(?<right>.+)".toRegex() // 10min1d6
-        private val MAX = "(?<left>.+)max(?<right>.+)".toRegex() // 10max1d6
+        private val MIN = "(?<left>.+)min$NOT_IN_LABEL(?<right>.+)".toRegex() // 10min1d6
+        private val MAX = "(?<left>.+)max$NOT_IN_LABEL(?<right>.+)".toRegex() // 10max1d6
+
+        // optional trailing label, only appended to the leaf patterns in the parsers map, e.g. 1d8[slashing]
+        private val LABEL = "\\s*(?:\\[(?<label>[^\\[\\]]*)\\])?"
+        private val LABEL_TEXT = "\\[(?<label>[^\\[\\]]*)\\]".toRegex() // any well-formed [text]
+        private val ONLY_LABEL = "^\\s*\\[(?<label>[^\\[\\]]*)\\]\\s*$".toRegex() // the right side of (1d6 + 2)[fire]
+        private const val LABEL_PLACEMENT_HINT = "; a label must be the last suffix of a die, number or group, e.g. 4d6k3[STR] or 2d6[x] asc, and a term takes at most one label"
     }
 
-    val parsers = linkedMapOf(
+    private val parsers: LinkedHashMap<Regex, (MatchResult) -> DiceExpression> = linkedMapOf(
             SORT to this::visitSort,
-            N_DICE_FACE.toRegex() to this::visitNDiceFace,
-            KEEP_DICE to this::visitKeepDice,
-            KEEP_LOW_DICE to this::visitKeepLowDice,
-            DICE_FACE.toRegex() to this::visitDiceFace,
-            DICE_FACE_X.toRegex() to this::visitDiceFaceX,
-            N_DICE_FACE_X.toRegex() to this::visitNDiceFaceX,
-            FUDGE_DICE.toRegex() to this::visitFudgeDice,
-            N_FUDGE_DICE.toRegex() to this::visitNFudgeDice,
-            DOT_FUDGE_DICE.toRegex() to this::visitFudgeDiceDot,
-            N_DOT_FUDGE_DICE.toRegex() to this::visitNFudgeDiceDot,
-            COMPOUND_DICE.toRegex() to this::visitCompoundDice,
-            COMPOUND_DICE_TARGET.toRegex() to this::visitCompoundDiceTarget,
-            EXPLODE_DICE.toRegex() to this::visitExplode,
-            EXPLODE_DICE_TARGET.toRegex() to this::visitExplodeTarget,
-            TARGET_POOL.toRegex() to this::visitTargetPool,
-            TARGET_POOL_PARENS.toRegex() to this::visitTargetPoolMod,
+            (N_DICE_FACE + LABEL).toRegex() to this::visitNDiceFace,
+            (KEEP_DICE.pattern + LABEL).toRegex() to this::visitKeepDice,
+            (KEEP_LOW_DICE.pattern + LABEL).toRegex() to this::visitKeepLowDice,
+            (DICE_FACE + LABEL).toRegex() to this::visitDiceFace,
+            (DICE_FACE_X + LABEL).toRegex() to this::visitDiceFaceX,
+            (N_DICE_FACE_X + LABEL).toRegex() to this::visitNDiceFaceX,
+            (FUDGE_DICE + LABEL).toRegex() to this::visitFudgeDice,
+            (N_FUDGE_DICE + LABEL).toRegex() to this::visitNFudgeDice,
+            (DOT_FUDGE_DICE + LABEL).toRegex() to this::visitFudgeDiceDot,
+            (N_DOT_FUDGE_DICE + LABEL).toRegex() to this::visitNFudgeDiceDot,
+            (COMPOUND_DICE + LABEL).toRegex() to this::visitCompoundDice,
+            (COMPOUND_DICE_TARGET + LABEL).toRegex() to this::visitCompoundDiceTarget,
+            (EXPLODE_DICE + LABEL).toRegex() to this::visitExplode,
+            (EXPLODE_DICE_TARGET + LABEL).toRegex() to this::visitExplodeTarget,
+            (TARGET_POOL + LABEL).toRegex() to this::visitTargetPool,
+            (TARGET_POOL_PARENS + LABEL).toRegex() to this::visitTargetPoolMod,
             MIN to this::visitMin,
             MAX to this::visitMax,
             NESTED to this::visitNested,
@@ -88,7 +98,7 @@ class RegexDice {
             MUL to this::visitMultiply,
             DIV to this::visitDivide,
             NEGATIVE to this::visitNegative,
-            INT.toRegex() to this::visitInt
+            ("(?<value>$INT)" + LABEL).toRegex() to this::visitInt
     )
 
     fun parse(expression: String): DiceExpression {
@@ -99,21 +109,73 @@ class RegexDice {
                 .filterKeys { it != null }
                 .map { Pair(it.key!!, it.value) }
                 .firstOrNull()
-                ?: throw ParseException("Failed to parse expression '$expression'")
+                ?: throw noMatch(expression)
 
         return result.second.invoke(result.first)
     }
 
+    /**
+     * Builds the exception for a fragment no parser matched. The label placement hint is only added when the
+     * fragment has a label and would match with its labels removed, e.g. `4d6[STR]k3` or `1d6[a][b]`, but not
+     * `4w6[a]` or a malformed bracket like `1d6[a[b]]`.
+     */
+    private fun noMatch(expression: String): ParseException {
+        val hint = if (LABEL_TEXT.containsMatchIn(expression) && matchesWithoutLabels(expression)) LABEL_PLACEMENT_HINT else ""
+        return ParseException("Failed to parse expression '$expression'$hint")
+    }
 
+    private fun matchesWithoutLabels(expression: String): Boolean {
+        val unlabelled = LABEL_TEXT.replace(expression, "").trim()
+        if (unlabelled.contains('[') || unlabelled.contains(']')) {
+            // a bracket left over after removing every well-formed label is malformed, not misplaced
+            return false
+        }
+        // a fragment made only of labels, e.g. the [a][b] of (1d6)[a][b], is a misplaced label too
+        return unlabelled.isBlank() || parsers.keys.any { it.matches(unlabelled) }
+    }
+
+    /**
+     * Returns `true` when [expression] matches one of the supported dice expression forms and every `[...]` label in
+     * it follows the label rules (letters, combining marks, decimal digits, symbols and emoji, spaces and
+     * - _ ' . , : / + ( ) # & ! ?, at most 64 Unicode code points), `false` otherwise. Unbalanced or nested label brackets (e.g. `1d6[a`) are
+     * `false` too. This never throws.
+     */
     fun validExpression(expression: String): Boolean {
         val trimmedExpression = expression.trim()
-        return parsers.filter { it.key.matches(trimmedExpression) }
-                .filterKeys { true }
-                .isNotEmpty()
+        if (parsers.keys.none { it.matches(trimmedExpression) }) {
+            return false
+        }
+        val unlabelled = LABEL_TEXT.replace(trimmedExpression, "")
+        if (unlabelled.contains('[') || unlabelled.contains(']')) {
+            return false
+        }
+        return LABEL_TEXT.findAll(trimmedExpression).all { labelViolation(it.groups["label"]!!.value) == null }
+    }
+
+    /**
+     * Returns the trimmed label of a leaf match, or `null` when it has none or it is blank.
+     *
+     * @throws ParseException if the label breaks the label rules
+     */
+    private fun labelFrom(match: MatchResult): String? {
+        val rawLabel = match.groups["label"]?.value ?: return null
+        return checkedLabel(rawLabel, match.value)
+    }
+
+    private fun checkedLabel(rawLabel: String, fragment: String): String? {
+        val violation = labelViolation(rawLabel)
+        if (violation != null) {
+            throw ParseException("Failed to parse expression '$fragment', invalid label '$rawLabel', $violation")
+        }
+        return normalizeLabel(rawLabel)
+    }
+
+    private fun groupIfLabelled(expression: DiceExpression, label: String?): DiceExpression {
+        return if (label == null) expression else GroupExpression(expression, label)
     }
 
     private fun visitInt(match: MatchResult): DiceExpression {
-        return NumberExpression(match.value.toInt())
+        return NumberExpression(match.groups["value"]!!.value.toInt(), labelFrom(match))
     }
 
     private fun visitNested(match: MatchResult): DiceExpression {
@@ -121,7 +183,16 @@ class RegexDice {
         // three parts
         // left ( middle ) right
         // middle is non null, the others could be empty
-        val middle = parse(match.groupValues[2])
+        val nested = parse(match.groupValues[2])
+
+        // a right side of exactly one label, e.g. (1d6 + 2)[fire], labels the group and is then treated as empty
+        val onlyLabel = ONLY_LABEL.matchEntire(match.groupValues[3])
+        val middle = if (onlyLabel != null) {
+            groupIfLabelled(nested, checkedLabel(onlyLabel.groups["label"]!!.value, match.value))
+        } else {
+            nested
+        }
+        val right = if (onlyLabel != null) "" else match.groupValues[3]
 
         val left: DiceExpression = if (match.groupValues[1].isNotEmpty()) {
             MultiplyExpression(parse(match.groupValues[1]), middle)
@@ -129,15 +200,15 @@ class RegexDice {
             middle
         }
 
-        return if (match.groupValues[3].isNotEmpty()) {
-            MultiplyExpression(left, parse(match.groupValues[3]))
+        return if (right.isNotEmpty()) {
+            MultiplyExpression(left, parse(right))
         } else {
             left
         }
     }
 
     private fun visitDiceFace(match: MatchResult): DiceExpression {
-        return visitDiceFace(match.groupValues[1])
+        return NDice(match.groupValues[1].toInt(), 1, labelFrom(match))
     }
 
     private fun visitDiceFace(numberOfFaces: String): DiceExpression {
@@ -152,18 +223,18 @@ class RegexDice {
         val numberOfFaces = match.groupValues[2].toInt()
         val numberOfDice = match.groupValues[1].ifEmpty { "1" }.toInt()
 
-        return NDice(numberOfFaces, numberOfDice)
+        return NDice(numberOfFaces, numberOfDice, labelFrom(match))
     }
 
     private fun visitDiceFaceX(match: MatchResult): DiceExpression {
         val numberOfFaces = match.groupValues[1]
-        return MultiplyExpression(visitDiceFace(numberOfFaces), visitDiceFace(numberOfFaces))
+        return groupIfLabelled(MultiplyExpression(visitDiceFace(numberOfFaces), visitDiceFace(numberOfFaces)), labelFrom(match))
     }
 
     private fun visitNDiceFaceX(match: MatchResult): DiceExpression {
         val numberOfFaces = match.groupValues[2].toInt()
         val numberOfDice = match.groupValues[1].ifEmpty { "1" }.toInt()
-        return MultiplyExpression(NDice(numberOfFaces, numberOfDice), NDice(numberOfFaces, numberOfDice))
+        return groupIfLabelled(MultiplyExpression(NDice(numberOfFaces, numberOfDice), NDice(numberOfFaces, numberOfDice)), labelFrom(match))
     }
 
     private fun visitAdd(match: MatchResult): DiceExpression {
@@ -191,27 +262,27 @@ class RegexDice {
     }
 
     private fun visitFudgeDice(match: MatchResult): DiceExpression {
-        return FudgeDice()
+        return FudgeDice(label = labelFrom(match))
     }
 
     private fun visitNFudgeDice(match: MatchResult): DiceExpression {
         val numberOfDice = match.groupValues[1].toInt()
-        return FudgeDice(numberOfDice)
+        return FudgeDice(numberOfDice, label = labelFrom(match))
     }
 
     private fun visitFudgeDiceDot(match: MatchResult): DiceExpression {
         val weight = match.groupValues[1].toInt()
-        return fudgeRoll(weight)
+        return fudgeRoll(weight, label = labelFrom(match))
     }
 
     private fun visitNFudgeDiceDot(match: MatchResult): DiceExpression {
         val numberOfDice = match.groupValues[1].toInt()
         val weight = match.groupValues[2].toInt()
-        return FudgeDice(numberOfDice, 6, weight)
+        return FudgeDice(numberOfDice, 6, weight, labelFrom(match))
     }
 
-    private fun fudgeRoll(weight: Int, sides: Int = 6): DiceExpression {
-        return FudgeDice(1, weight)
+    private fun fudgeRoll(weight: Int, sides: Int = 6, label: String? = null): DiceExpression {
+        return FudgeDice(1, weight, label = label)
     }
 
     private fun visitKeepDice(match: MatchResult): DiceExpression {
@@ -219,7 +290,7 @@ class RegexDice {
         val numberOfFaces = match.groupValues[2].toInt()
         val numberToKeep = match.groupValues[3].toInt()
 
-        return KeepDice(numberOfFaces, numberOfDice, numberToKeep)
+        return KeepDice(numberOfFaces, numberOfDice, numberToKeep, labelFrom(match))
     }
 
     private fun visitKeepLowDice(match: MatchResult): DiceExpression {
@@ -227,7 +298,7 @@ class RegexDice {
         val numberOfFaces = match.groupValues[2].toInt()
         val numberToKeep = match.groupValues[3].toInt()
 
-        return KeepLowDice(numberOfFaces, numberOfDice, numberToKeep)
+        return KeepLowDice(numberOfFaces, numberOfDice, numberToKeep, labelFrom(match))
     }
 
     fun comparisonFrom(text: String): Comparison {
@@ -245,7 +316,7 @@ class RegexDice {
         val comp = match.groupValues[3] // <, >, =
         val targetNumber = match.groupValues[4].toInt()
 
-        return rollTargetPool(numberOfDice, diceFace, comp, targetNumber)
+        return rollTargetPool(numberOfDice, diceFace, comp, targetNumber, labelFrom(match))
     }
 
     private fun visitTargetPoolMod(match: MatchResult): DiceExpression {
@@ -263,18 +334,18 @@ class RegexDice {
             targetNumber += modifier
         }
 
-        return rollTargetPool(numberOfDice, diceFace, comp, targetNumber)
+        return rollTargetPool(numberOfDice, diceFace, comp, targetNumber, labelFrom(match))
     }
 
-    private fun rollTargetPool(numberOfDice: Int, numberOfFaces: Int, comp: String, targetNumber: Int): DiceExpression {
-        return TargetPoolDice(numberOfFaces, numberOfDice, comparisonFrom(comp), targetNumber)
+    private fun rollTargetPool(numberOfDice: Int, numberOfFaces: Int, comp: String, targetNumber: Int, label: String?): DiceExpression {
+        return TargetPoolDice(numberOfFaces, numberOfDice, comparisonFrom(comp), targetNumber, label = label)
     }
 
     private fun visitCompoundDice(match: MatchResult): DiceExpression { // 3d6!!
         val numberOfDice = match.groupValues[1].toInt()
         val numberOfFaces = match.groupValues[2].toInt()
 
-        return CompoundingDice(numberOfFaces, numberOfDice)
+        return CompoundingDice(numberOfFaces, numberOfDice, label = labelFrom(match))
     }
 
     private fun visitCompoundDiceTarget(match: MatchResult): DiceExpression { // 3d6!!<5
@@ -283,7 +354,7 @@ class RegexDice {
         val comp = match.groupValues[3].ifEmpty { "=" }
         val target = match.groupValues[4].toInt()
 
-        return CompoundingDice(numberOfFaces, numberOfDice, comparisonFrom(comp), target)
+        return CompoundingDice(numberOfFaces, numberOfDice, comparisonFrom(comp), target, labelFrom(match))
     }
 
 
@@ -291,7 +362,7 @@ class RegexDice {
         val numberOfDice = match.groupValues[1].toInt()
         val numberOfFaces = match.groupValues[2].toInt()
 
-        return ExplodingDice(numberOfFaces, numberOfDice)
+        return ExplodingDice(numberOfFaces, numberOfDice, label = labelFrom(match))
     }
 
     private fun visitExplodeTarget(match: MatchResult): DiceExpression { // 3d6!>5 or 3d6!5
@@ -300,7 +371,7 @@ class RegexDice {
         val comp = match.groupValues[3].ifEmpty { "=" }
         val target = match.groupValues[4].toInt()
 
-        return ExplodingDice(numberOfFaces, numberOfDice, comparisonFrom(comp), target)
+        return ExplodingDice(numberOfFaces, numberOfDice, comparisonFrom(comp), target, labelFrom(match))
     }
 
     private fun visitNegative(match: MatchResult): DiceExpression { // -1, -1d6
