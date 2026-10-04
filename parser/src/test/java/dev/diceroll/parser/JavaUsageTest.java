@@ -15,7 +15,7 @@
  */
 package dev.diceroll.parser;
 
-import org.testng.annotations.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,18 +25,18 @@ public class JavaUsageTest {
      * All the testing is done in Kotlin, this Java test makes sure the Java usage works, i.e. Dice.roll(...)
      */
     @Test
-    public void simpleUsageTest() {
+    void simpleUsageTest() {
         assertThat(Dice.roll("2d6")).isGreaterThanOrEqualTo(2);
     }
 
     @Test
-    public void labelUsageTest() {
+    void labelUsageTest() {
         assertThat(Dice.detailedRoll("1d8[slashing]").getExpression().getLabel()).isEqualTo("slashing");
         assertThat(Dice.detailedRoll("1d8[slashing]").getLabel()).isEqualTo("slashing");
     }
 
     @Test
-    public void existingConstructorsTest() {
+    void existingConstructorsTest() {
         NumberExpression three = new NumberExpression(3);
         assertThat(three.getLabel()).isNull();
         assertThat(three.description()).isEqualTo("3");
@@ -44,7 +44,7 @@ public class JavaUsageTest {
     }
 
     @Test
-    public void customExpressionTest() {
+    void customExpressionTest() {
         // a Java implementation written before labels existed only implements description()
         DiceExpression custom = new DiceExpression() {
             @Override
@@ -56,14 +56,14 @@ public class JavaUsageTest {
     }
 
     @Test
-    public void customVisitorTest() {
+    void customVisitorTest() {
         DiceVisitor<Integer> visitor = new PreLabelVisitor();
         DiceExpression group = new GroupExpression(new NumberExpression(3), "x");
         assertThat(visitor.visit(group)).isEqualTo(3);
     }
 
     @Test
-    public void unlabelledGroupTest() {
+    void unlabelledGroupTest() {
         DiceExpression group = new GroupExpression(new NumberExpression(3));
         assertThat(group.getLabel()).isNull();
         assertThat(group.description()).isEqualTo("(3)");

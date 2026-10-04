@@ -65,6 +65,8 @@
 
         <kotlin.version>2.4.20</kotlin.version>
         <assertj.version>3.27.7</assertj.version>
+        <!-- JUnit 6 needs Java 17; stay on 5.x while the build targets Java 8 (also remove the junit-bom major-version ignore in .github/dependabot.yml) -->
+        <junit.version>5.14.4</junit.version>
     </properties>
 
     <modules>
@@ -81,8 +83,17 @@
 
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-test-testng</artifactId>
+                <artifactId>kotlin-test-junit5</artifactId>
                 <version>${kotlin.version}</version>
+            </dependency>
+
+            <!-- pins the Jupiter version that kotlin-test-junit5 brings in transitively -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <dependency>
