@@ -21,6 +21,10 @@ updates:
     schedule:
       interval: 'daily'
     open-pull-requests-limit: 15
+    ignore:
+      # JUnit 6 needs Java 17; the build still targets Java 8. Remove this ignore when the Java target moves to 17+.
+      - dependency-name: 'org.junit:junit-bom'
+        update-types: ['version-update:semver-major']
 
   # Dependencies for GitHub Actions
   - package-ecosystem: 'github-actions'
