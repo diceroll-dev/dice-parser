@@ -28,7 +28,6 @@ import dev.diceroll.parser.NumberExpression
 import dev.diceroll.parser.ParseException
 import dev.diceroll.parser.ResultTree
 import dev.diceroll.parser.SortedDiceExpression
-import org.testng.Assert.assertThrows
 import java.util.stream.Collectors
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -85,14 +84,14 @@ class RegexDiceTest {
 
     @Test
     fun overflowRoll() {
-        assertThrows(ArithmeticException::class.java) {
+        assertFailsWith<ArithmeticException> {
             parse("1000000d1000000")
         }
     }
 
     @Test
     fun overflowSum() {
-        assertThrows(ArithmeticException::class.java) {
+        assertFailsWith<ArithmeticException> {
             parse(Int.MAX_VALUE.toString() + "+" + Int.MAX_VALUE.toString())
         }
     }
@@ -392,12 +391,12 @@ class RegexDiceTest {
 
     @Test
     fun invalidLabels() {
-        assertThrows(ParseException::class.java) { RegexDice().parse("4d6[STR]k3") }
-        assertThrows(ParseException::class.java) { RegexDice().parse("2d6 asc[x]") }
-        assertThrows(ParseException::class.java) { RegexDice().parse("1d6[a][b]") }
-        assertThrows(ParseException::class.java) { RegexDice().parse("1d6[a") }
-        assertThrows(ParseException::class.java) { RegexDice().parse("1d6]") }
-        assertThrows(ParseException::class.java) { RegexDice().parse("1d6[a[b]]") }
+        assertFailsWith<ParseException> { RegexDice().parse("4d6[STR]k3") }
+        assertFailsWith<ParseException> { RegexDice().parse("2d6 asc[x]") }
+        assertFailsWith<ParseException> { RegexDice().parse("1d6[a][b]") }
+        assertFailsWith<ParseException> { RegexDice().parse("1d6[a") }
+        assertFailsWith<ParseException> { RegexDice().parse("1d6]") }
+        assertFailsWith<ParseException> { RegexDice().parse("1d6[a[b]]") }
         // malformed brackets simply fail to match, without the label placement hint
         listOf("1d6[a", "1d6]", "1d6[a[b]]").forEach { expression ->
             val error = assertFailsWith<ParseException>(expression) { RegexDice().parse(expression) }
