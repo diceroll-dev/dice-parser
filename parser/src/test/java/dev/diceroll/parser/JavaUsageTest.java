@@ -15,8 +15,9 @@
  */
 package dev.diceroll.parser;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class JavaUsageTest {
 
@@ -25,21 +26,21 @@ public class JavaUsageTest {
      */
     @Test
     public void simpleUsageTest() {
-        Assert.assertTrue(Dice.roll("2d6") >= 2,"Expected a value >= 2");
+        assertThat(Dice.roll("2d6")).isGreaterThanOrEqualTo(2);
     }
 
     @Test
     public void labelUsageTest() {
-        Assert.assertEquals(Dice.detailedRoll("1d8[slashing]").getExpression().getLabel(), "slashing");
-        Assert.assertEquals(Dice.detailedRoll("1d8[slashing]").getLabel(), "slashing");
+        assertThat(Dice.detailedRoll("1d8[slashing]").getExpression().getLabel()).isEqualTo("slashing");
+        assertThat(Dice.detailedRoll("1d8[slashing]").getLabel()).isEqualTo("slashing");
     }
 
     @Test
     public void existingConstructorsTest() {
         NumberExpression three = new NumberExpression(3);
-        Assert.assertNull(three.getLabel());
-        Assert.assertEquals(three.description(), "3");
-        Assert.assertEquals(new NumberExpression(3, "STR").description(), "3[STR]");
+        assertThat(three.getLabel()).isNull();
+        assertThat(three.description()).isEqualTo("3");
+        assertThat(new NumberExpression(3, "STR").description()).isEqualTo("3[STR]");
     }
 
     @Test
@@ -51,22 +52,22 @@ public class JavaUsageTest {
                 return "custom";
             }
         };
-        Assert.assertNull(custom.getLabel());
+        assertThat(custom.getLabel()).isNull();
     }
 
     @Test
     public void customVisitorTest() {
         DiceVisitor<Integer> visitor = new PreLabelVisitor();
         DiceExpression group = new GroupExpression(new NumberExpression(3), "x");
-        Assert.assertEquals(visitor.visit(group), Integer.valueOf(3));
+        assertThat(visitor.visit(group)).isEqualTo(3);
     }
 
     @Test
     public void unlabelledGroupTest() {
         DiceExpression group = new GroupExpression(new NumberExpression(3));
-        Assert.assertNull(group.getLabel());
-        Assert.assertEquals(group.description(), "(3)");
-        Assert.assertNull(new GroupExpression(new NumberExpression(3), null).getLabel());
+        assertThat(group.getLabel()).isNull();
+        assertThat(group.description()).isEqualTo("(3)");
+        assertThat(new GroupExpression(new NumberExpression(3), null).getLabel()).isNull();
     }
 
     /**
