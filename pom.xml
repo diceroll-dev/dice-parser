@@ -63,7 +63,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <project.build.outputTimestamp>2025-05-12T20:05:43Z</project.build.outputTimestamp>
 
-        <kotlin.version>2.4.20</kotlin.version>
+        <kotlin.version>2.4.21</kotlin.version>
         <assertj.version>3.27.7</assertj.version>
         <!-- JUnit 6 needs Java 17; stay on 5.x while the build targets Java 8 (also remove the junit-bom major-version ignore in .github/dependabot.yml) -->
         <junit.version>5.14.4</junit.version>
