@@ -30,6 +30,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 version="${1}"
+branch=$(git branch --show-current)
 tag="dice-parser-${version}"
 echo "Updating version to: ${version}"
 ./mvnw versions:set -DnewVersion=${version} -N
@@ -39,3 +40,14 @@ git commit -am "[release] Setting version to ${version}"
 echo "Creating the tag: ${tag}"
 git tag --sign ${tag} -m "[release] ${version}"
 git push origin ${tag}
+
+echo "Setting the next snapshot"
+git checkout origin ${branch}
+./mvnw versions:set -DnextSnapshot=true -N
+next_version=$(./mvnw --non-recursive --quiet --batch-mode \
+                  -DforceStdout=true \
+                  -Dexpression=project.version \
+                  help:evaluate \
+                  | tail -n 1)
+git commit -am "[release] next snapshot ${next_version}"
+git push origin ${branch}
